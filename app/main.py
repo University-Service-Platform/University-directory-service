@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from app.database import engine, Base
 from app.routes.validation import router as validation_router
 from app.routes.health import router as health_router
+from app.routes.faculties import router as faculties_router
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -29,6 +30,8 @@ async def custom_http_exception_handler(request: Request, exc: HTTPException):
         code = "FORBIDDEN"
     elif exc.status_code == 404:
         code = "NOT_FOUND"
+    elif exc.status_code == 409:
+        code = "CONFLICT"
 
     return JSONResponse(
         status_code=exc.status_code,
@@ -43,3 +46,4 @@ async def custom_http_exception_handler(request: Request, exc: HTTPException):
 
 app.include_router(health_router)
 app.include_router(validation_router)
+app.include_router(faculties_router)
