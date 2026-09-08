@@ -20,6 +20,10 @@ from app.schemas.department_validation import (
     DepartmentValidationData,
     DepartmentValidationResponse
 )
+from app.schemas.service_unit_validation import (
+    ServiceUnitValidationData,
+    ServiceUnitValidationResponse
+)
 
 __all__ = [
     "FacultyValidationData",
@@ -38,4 +42,6 @@ __all__ = [
     "ServiceUnitListResponse",
     "DepartmentValidationData",
     "DepartmentValidationResponse",
+    "ServiceUnitValidationData",
+    "ServiceUnitValidationResponse",
 ]
