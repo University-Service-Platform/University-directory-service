@@ -8,6 +8,14 @@ from app.schemas.faculty import (
     FacultySingleResponse,
     FacultyListResponse
 )
+from app.schemas.service_unit import (
+    ServiceUnitBase,
+    ServiceUnitCreate,
+    ServiceUnitUpdate,
+    ServiceUnitResponse,
+    ServiceUnitSingleResponse,
+    ServiceUnitListResponse
+)
 
 __all__ = [
     "FacultyValidationData",
@@ -18,4 +26,10 @@ __all__ = [
     "FacultyResponse",
     "FacultySingleResponse",
     "FacultyListResponse",
+    "ServiceUnitBase",
+    "ServiceUnitCreate",
+    "ServiceUnitUpdate",
+    "ServiceUnitResponse",
+    "ServiceUnitSingleResponse",
+    "ServiceUnitListResponse",
 ]
