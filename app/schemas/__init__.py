@@ -16,6 +16,10 @@ from app.schemas.service_unit import (
     ServiceUnitSingleResponse,
     ServiceUnitListResponse
 )
+from app.schemas.department_validation import (
+    DepartmentValidationData,
+    DepartmentValidationResponse
+)
 
 __all__ = [
     "FacultyValidationData",
@@ -32,4 +36,6 @@ __all__ = [
     "ServiceUnitResponse",
     "ServiceUnitSingleResponse",
     "ServiceUnitListResponse",
+    "DepartmentValidationData",
+    "DepartmentValidationResponse",
 ]
