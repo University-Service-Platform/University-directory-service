@@ -14,3 +14,5 @@ class Department(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     faculty = relationship("Faculty", back_populates="departments")
+    affiliations = relationship("UserAffiliation", cascade="all, delete-orphan", back_populates="department")
+

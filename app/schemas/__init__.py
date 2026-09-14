@@ -24,6 +24,14 @@ from app.schemas.department import (
     DepartmentSingleResponse,
     DepartmentListResponse
 )
+from app.schemas.affiliation import (
+    AffiliationBase,
+    AffiliationCreate,
+    AffiliationUpdate,
+    AffiliationResponse,
+    AffiliationSingleResponse,
+    AffiliationListResponse
+)
 from app.schemas.department_validation import (
     DepartmentValidationData,
     DepartmentValidationResponse
@@ -59,6 +67,12 @@ __all__ = [
     "DepartmentResponse",
     "DepartmentSingleResponse",
     "DepartmentListResponse",
+    "AffiliationBase",
+    "AffiliationCreate",
+    "AffiliationUpdate",
+    "AffiliationResponse",
+    "AffiliationSingleResponse",
+    "AffiliationListResponse",
     "DepartmentValidationData",
     "DepartmentValidationResponse",
     "ServiceUnitValidationData",
@@ -67,4 +81,5 @@ __all__ = [
     "UserResponsibilityValidationData",
     "UserResponsibilityValidationResponse",
 ]
+
 
