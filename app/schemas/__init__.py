@@ -16,6 +16,14 @@ from app.schemas.service_unit import (
     ServiceUnitSingleResponse,
     ServiceUnitListResponse
 )
+from app.schemas.department import (
+    DepartmentBase,
+    DepartmentCreate,
+    DepartmentUpdate,
+    DepartmentResponse,
+    DepartmentSingleResponse,
+    DepartmentListResponse
+)
 from app.schemas.department_validation import (
     DepartmentValidationData,
     DepartmentValidationResponse
@@ -45,6 +53,12 @@ __all__ = [
     "ServiceUnitResponse",
     "ServiceUnitSingleResponse",
     "ServiceUnitListResponse",
+    "DepartmentBase",
+    "DepartmentCreate",
+    "DepartmentUpdate",
+    "DepartmentResponse",
+    "DepartmentSingleResponse",
+    "DepartmentListResponse",
     "DepartmentValidationData",
     "DepartmentValidationResponse",
     "ServiceUnitValidationData",
@@ -53,3 +67,4 @@ __all__ = [
     "UserResponsibilityValidationData",
     "UserResponsibilityValidationResponse",
 ]
+
