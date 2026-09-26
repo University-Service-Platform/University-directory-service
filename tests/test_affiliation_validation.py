@@ -3,7 +3,7 @@ from app.models.department import Department
 from app.models.faculty import Faculty
 from app.models.user_affiliation import UserAffiliation
 
-URL = "/validation/users/{}/affiliation"
+URL = "/api/v1/validation/users/{}/affiliation"
 
 
 def seed(db_session):

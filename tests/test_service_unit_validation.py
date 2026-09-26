@@ -19,7 +19,7 @@ def seed_service_unit_data(db_session):
 
 def test_validate_service_unit_by_id(client, db_session):
     seed_service_unit_data(db_session)
-    response = client.get("/validation/service-units/unit-it-201")
+    response = client.get("/api/v1/validation/service-units/unit-it-201")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -31,7 +31,7 @@ def test_validate_service_unit_by_id(client, db_session):
 
 def test_validate_service_unit_by_code(client, db_session):
     seed_service_unit_data(db_session)
-    response = client.get("/validation/service-units/UNIT-LIB")
+    response = client.get("/api/v1/validation/service-units/UNIT-LIB")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -40,7 +40,7 @@ def test_validate_service_unit_by_code(client, db_session):
 
 def test_validate_unknown_service_unit(client, db_session):
     seed_service_unit_data(db_session)
-    response = client.get("/validation/service-units/non-existent-unit")
+    response = client.get("/api/v1/validation/service-units/non-existent-unit")
     assert response.status_code == 404
     data = response.json()
     assert data["success"] is False
@@ -48,7 +48,7 @@ def test_validate_unknown_service_unit(client, db_session):
 
 def test_validate_malformed_service_unit_id(client, db_session):
     seed_service_unit_data(db_session)
-    response = client.get("/validation/service-units/a")
+    response = client.get("/api/v1/validation/service-units/a")
     assert response.status_code == 400
     data = response.json()
     assert data["success"] is False

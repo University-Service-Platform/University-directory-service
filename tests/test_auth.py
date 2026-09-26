@@ -42,45 +42,45 @@ def assert_unauthorized(response):
 # ---------------------------------------------------------------------------
 
 def test_missing_token_rejected_on_management_endpoint(anon_client):
-    assert_unauthorized(anon_client.post("/faculties", json=FACULTY_PAYLOAD))
+    assert_unauthorized(anon_client.post("/api/v1/faculties", json=FACULTY_PAYLOAD))
 
 
 def test_missing_token_rejected_on_read_endpoint(anon_client):
-    assert_unauthorized(anon_client.get("/faculties"))
+    assert_unauthorized(anon_client.get("/api/v1/faculties"))
 
 
 def test_missing_token_rejected_on_validation_endpoint(anon_client):
-    assert_unauthorized(anon_client.get("/validation/faculties/fac-x-1"))
+    assert_unauthorized(anon_client.get("/api/v1/validation/faculties/fac-x-1"))
 
 
 def test_malformed_token_rejected(anon_client):
-    assert_unauthorized(anon_client.get("/faculties", headers=bearer("not-a-jwt")))
+    assert_unauthorized(anon_client.get("/api/v1/faculties", headers=bearer("not-a-jwt")))
 
 
 def test_bad_signature_rejected(anon_client):
     token = make_rs256_token(key=OTHER_KEY)
-    assert_unauthorized(anon_client.post("/faculties", json=FACULTY_PAYLOAD, headers=bearer(token)))
+    assert_unauthorized(anon_client.post("/api/v1/faculties", json=FACULTY_PAYLOAD, headers=bearer(token)))
 
 
 def test_expired_token_rejected(anon_client):
     token = make_rs256_token(expires_in=-60)
-    response = anon_client.post("/faculties", json=FACULTY_PAYLOAD, headers=bearer(token))
+    response = anon_client.post("/api/v1/faculties", json=FACULTY_PAYLOAD, headers=bearer(token))
     assert_unauthorized(response)
     assert response.json()["error"]["message"] == "Authentication token has expired."
 
 
 def test_wrong_issuer_rejected(anon_client):
     token = make_rs256_token(issuer="someone-else")
-    assert_unauthorized(anon_client.post("/faculties", json=FACULTY_PAYLOAD, headers=bearer(token)))
+    assert_unauthorized(anon_client.post("/api/v1/faculties", json=FACULTY_PAYLOAD, headers=bearer(token)))
 
 
 def test_wrong_audience_rejected(anon_client):
     token = make_rs256_token(audience="another-service")
-    assert_unauthorized(anon_client.post("/faculties", json=FACULTY_PAYLOAD, headers=bearer(token)))
+    assert_unauthorized(anon_client.post("/api/v1/faculties", json=FACULTY_PAYLOAD, headers=bearer(token)))
 
 
 def test_non_admin_forbidden_on_management_endpoint(anon_client):
-    response = anon_client.post("/faculties", json=FACULTY_PAYLOAD, headers=bearer(STAFF_TOKEN))
+    response = anon_client.post("/api/v1/faculties", json=FACULTY_PAYLOAD, headers=bearer(STAFF_TOKEN))
     assert response.status_code == 403
     assert response.json()["error"] == {
         "code": "FORBIDDEN",
@@ -89,11 +89,11 @@ def test_non_admin_forbidden_on_management_endpoint(anon_client):
 
 
 @pytest.mark.parametrize("method,path", [
-    ("put", "/faculties/fac-x-1"),
-    ("delete", "/faculties/fac-x-1"),
-    ("patch", "/departments/dept-x-1"),
-    ("delete", "/service-units/unit-x-1"),
-    ("post", "/affiliations"),
+    ("put", "/api/v1/faculties/fac-x-1"),
+    ("delete", "/api/v1/faculties/fac-x-1"),
+    ("patch", "/api/v1/departments/dept-x-1"),
+    ("delete", "/api/v1/service-units/unit-x-1"),
+    ("post", "/api/v1/affiliations"),
 ])
 def test_non_admin_forbidden_on_every_write(anon_client, method, path):
     response = getattr(anon_client, method)(path, headers=bearer(STAFF_TOKEN), **({"json": {}} if method != "delete" else {}))
@@ -101,13 +101,13 @@ def test_non_admin_forbidden_on_every_write(anon_client, method, path):
 
 
 def test_non_admin_can_read(anon_client):
-    response = anon_client.get("/faculties", headers=bearer(STAFF_TOKEN))
+    response = anon_client.get("/api/v1/faculties", headers=bearer(STAFF_TOKEN))
     assert response.status_code == 200
 
 
 def test_admin_allowed(anon_client):
     token = make_rs256_token(roles=["admin"])  # role matching is case-insensitive
-    response = anon_client.post("/faculties", json=FACULTY_PAYLOAD, headers=bearer(token))
+    response = anon_client.post("/api/v1/faculties", json=FACULTY_PAYLOAD, headers=bearer(token))
     assert response.status_code == 201
 
 

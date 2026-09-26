@@ -42,7 +42,7 @@ def test_create_department_success(client, db_session):
         "name": "Department of Information Systems",
         "faculty_id": "fac-comp-001"
     }
-    response = client.post("/departments", json=payload)
+    response = client.post("/api/v1/departments", json=payload)
     assert response.status_code == 201
     data = response.json()
     assert data["success"] is True
@@ -65,7 +65,7 @@ def test_create_department_with_faculty_code(client, db_session):
         "name": "Department of Chemistry",
         "faculty_id": "FSC"  # Referenced by Faculty code
     }
-    response = client.post("/departments", json=payload)
+    response = client.post("/api/v1/departments", json=payload)
     assert response.status_code == 201
     data = response.json()
     assert data["success"] is True
@@ -79,7 +79,7 @@ def test_create_department_duplicate_code_rejected(client, db_session):
         "name": "Another Computer Science Dept",
         "faculty_id": "fac-comp-001"
     }
-    response = client.post("/departments", json=payload)
+    response = client.post("/api/v1/departments", json=payload)
     assert response.status_code == 409
     data = response.json()
     assert data["success"] is False
@@ -92,7 +92,7 @@ def test_create_department_nonexistent_faculty_rejected(client, db_session):
         "name": "Department of Biology",
         "faculty_id": "non-existent-faculty-id"
     }
-    response = client.post("/departments", json=payload)
+    response = client.post("/api/v1/departments", json=payload)
     assert response.status_code == 404
     data = response.json()
     assert data["success"] is False
@@ -105,14 +105,14 @@ def test_create_department_malformed_code_rejected(client, db_session):
         "name": "Invalid Department",
         "faculty_id": "fac-comp-001"
     }
-    response = client.post("/departments", json=payload)
+    response = client.post("/api/v1/departments", json=payload)
     assert response.status_code in [400, 422]
 
 # --- Retrieval Tests ---
 
 def test_list_departments(client, db_session):
     seed_faculty_and_departments(db_session)
-    response = client.get("/departments")
+    response = client.get("/api/v1/departments")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -123,7 +123,7 @@ def test_list_departments(client, db_session):
 
 def test_list_departments_pagination(client, db_session):
     seed_faculty_and_departments(db_session)
-    response = client.get("/departments?skip=1&limit=1")
+    response = client.get("/api/v1/departments?skip=1&limit=1")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -142,7 +142,7 @@ def test_list_departments_filter_by_faculty(client, db_session):
     db_session.commit()
 
     # Filter by fac-science-002
-    response = client.get("/departments?faculty_id=fac-science-002")
+    response = client.get("/api/v1/departments?faculty_id=fac-science-002")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -151,7 +151,7 @@ def test_list_departments_filter_by_faculty(client, db_session):
 
 def test_get_department_by_id_success(client, db_session):
     seed_faculty_and_departments(db_session)
-    response = client.get("/departments/dept-cs-101")
+    response = client.get("/api/v1/departments/dept-cs-101")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -161,7 +161,7 @@ def test_get_department_by_id_success(client, db_session):
 
 def test_get_department_by_code_success(client, db_session):
     seed_faculty_and_departments(db_session)
-    response = client.get("/departments/dept-se")
+    response = client.get("/api/v1/departments/dept-se")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -170,7 +170,7 @@ def test_get_department_by_code_success(client, db_session):
 
 def test_get_department_nonexistent_rejected(client, db_session):
     seed_faculty_and_departments(db_session)
-    response = client.get("/departments/non-existent-dept")
+    response = client.get("/api/v1/departments/non-existent-dept")
     assert response.status_code == 404
     data = response.json()
     assert data["success"] is False
@@ -178,7 +178,7 @@ def test_get_department_nonexistent_rejected(client, db_session):
 
 def test_get_department_malformed_identifier_rejected(client, db_session):
     seed_faculty_and_departments(db_session)
-    response = client.get("/departments/x")
+    response = client.get("/api/v1/departments/x")
     assert response.status_code == 400
     data = response.json()
     assert data["success"] is False
@@ -191,7 +191,7 @@ def test_update_department_name_success(client, db_session):
     update_payload = {
         "name": "Department of Computer Science and Engineering"
     }
-    response = client.put("/departments/dept-cs-101", json=update_payload)
+    response = client.put("/api/v1/departments/dept-cs-101", json=update_payload)
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -207,7 +207,7 @@ def test_patch_department_code_success(client, db_session):
     patch_payload = {
         "code": "DEPT-CS-NEW"
     }
-    response = client.patch("/departments/dept-cs-101", json=patch_payload)
+    response = client.patch("/api/v1/departments/dept-cs-101", json=patch_payload)
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -222,7 +222,7 @@ def test_update_department_faculty_reassignment(client, db_session):
     update_payload = {
         "faculty_id": "fac-science-002"
     }
-    response = client.put("/departments/dept-cs-101", json=update_payload)
+    response = client.put("/api/v1/departments/dept-cs-101", json=update_payload)
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -237,7 +237,7 @@ def test_update_department_nonexistent_faculty_rejected(client, db_session):
     update_payload = {
         "faculty_id": "non-existent-faculty"
     }
-    response = client.put("/departments/dept-cs-101", json=update_payload)
+    response = client.put("/api/v1/departments/dept-cs-101", json=update_payload)
     assert response.status_code == 404
     data = response.json()
     assert data["success"] is False
@@ -249,7 +249,7 @@ def test_update_department_duplicate_code_rejected(client, db_session):
     update_payload = {
         "code": "DEPT-SE"
     }
-    response = client.put("/departments/dept-cs-101", json=update_payload)
+    response = client.put("/api/v1/departments/dept-cs-101", json=update_payload)
     assert response.status_code == 409
     data = response.json()
     assert data["success"] is False
@@ -259,12 +259,12 @@ def test_update_department_duplicate_code_rejected(client, db_session):
 
 def test_delete_department_success(client, db_session):
     seed_faculty_and_departments(db_session)
-    response = client.delete("/departments/dept-cs-101")
+    response = client.delete("/api/v1/departments/dept-cs-101")
     assert response.status_code == 200
     assert response.json()["success"] is True
 
     # Subsequent GET returns 404
-    get_res = client.get("/departments/dept-cs-101")
+    get_res = client.get("/api/v1/departments/dept-cs-101")
     assert get_res.status_code == 404
 
     # Verify directly in DB
@@ -273,7 +273,7 @@ def test_delete_department_success(client, db_session):
 
 def test_delete_nonexistent_department_rejected(client, db_session):
     seed_faculty_and_departments(db_session)
-    response = client.delete("/departments/non-existent-dept")
+    response = client.delete("/api/v1/departments/non-existent-dept")
     assert response.status_code == 404
     assert response.json()["error"]["code"] == "DEPARTMENT_NOT_FOUND"
 
@@ -305,12 +305,12 @@ def test_department_crud_integration_with_validation_endpoint(client, db_session
         "name": "Department of History",
         "faculty_id": "fac-arts-003"
     }
-    create_res = client.post("/departments", json=create_payload)
+    create_res = client.post("/api/v1/departments", json=create_payload)
     assert create_res.status_code == 201
     dept_id = create_res.json()["data"]["id"]
 
     # 2. Validate via Daya's validation endpoint
-    val_res1 = client.get("/validation/departments/DEPT-HIST")
+    val_res1 = client.get("/api/v1/validation/departments/DEPT-HIST")
     assert val_res1.status_code == 200
     val_data1 = val_res1.json()["data"]
     assert val_data1["department_id"] == dept_id
@@ -321,19 +321,19 @@ def test_department_crud_integration_with_validation_endpoint(client, db_session
     assert val_data1["is_valid"] is True
 
     # 3. Update department
-    update_res = client.put(f"/departments/{dept_id}", json={"name": "Department of History & Archaeology"})
+    update_res = client.put(f"/api/v1/departments/{dept_id}", json={"name": "Department of History & Archaeology"})
     assert update_res.status_code == 200
 
     # 4. Re-validate via Daya's endpoint
-    val_res2 = client.get("/validation/departments/DEPT-HIST")
+    val_res2 = client.get("/api/v1/validation/departments/DEPT-HIST")
     assert val_res2.status_code == 200
     assert val_res2.json()["data"]["name"] == "Department of History & Archaeology"
 
     # 5. Delete department
-    del_res = client.delete(f"/departments/{dept_id}")
+    del_res = client.delete(f"/api/v1/departments/{dept_id}")
     assert del_res.status_code == 200
 
     # 6. Validate via Daya's endpoint -> now 404
-    val_res3 = client.get("/validation/departments/DEPT-HIST")
+    val_res3 = client.get("/api/v1/validation/departments/DEPT-HIST")
     assert val_res3.status_code == 404
     assert val_res3.json()["error"]["code"] == "DEPARTMENT_NOT_FOUND"

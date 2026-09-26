@@ -52,7 +52,7 @@ def test_create_affiliation_success(client, db_session):
         "department_id": "dept-cs-101",
         "faculty_id": "fac-comp-101"
     }
-    response = client.post("/affiliations", json=payload)
+    response = client.post("/api/v1/affiliations", json=payload)
     assert response.status_code == 201
     data = response.json()
     assert data["success"] is True
@@ -78,7 +78,7 @@ def test_create_affiliation_faculty_automatically_derived(client, db_session):
         "department_id": "dept-chem-102"
         # faculty_id omitted
     }
-    response = client.post("/affiliations", json=payload)
+    response = client.post("/api/v1/affiliations", json=payload)
     assert response.status_code == 201
     data = response.json()
     assert data["success"] is True
@@ -94,7 +94,7 @@ def test_create_affiliation_nonexistent_department_rejected(client, db_session):
         "user_id": "usr-student-003",
         "department_id": "non-existent-dept"
     }
-    response = client.post("/affiliations", json=payload)
+    response = client.post("/api/v1/affiliations", json=payload)
     assert response.status_code == 404
     data = response.json()
     assert data["success"] is False
@@ -108,7 +108,7 @@ def test_create_affiliation_nonexistent_faculty_rejected(client, db_session):
         "department_id": "dept-cs-101",
         "faculty_id": "non-existent-faculty"
     }
-    response = client.post("/affiliations", json=payload)
+    response = client.post("/api/v1/affiliations", json=payload)
     assert response.status_code == 404
     data = response.json()
     assert data["success"] is False
@@ -123,7 +123,7 @@ def test_create_affiliation_mismatched_department_faculty_rejected(client, db_se
         "department_id": "dept-cs-101",
         "faculty_id": "fac-science-102"
     }
-    response = client.post("/affiliations", json=payload)
+    response = client.post("/api/v1/affiliations", json=payload)
     assert response.status_code == 400
     data = response.json()
     assert data["success"] is False
@@ -136,10 +136,10 @@ def test_create_affiliation_duplicate_rejected(client, db_session):
         "user_id": "usr-student-006",
         "department_id": "dept-cs-101"
     }
-    res1 = client.post("/affiliations", json=payload)
+    res1 = client.post("/api/v1/affiliations", json=payload)
     assert res1.status_code == 201
 
-    res2 = client.post("/affiliations", json=payload)
+    res2 = client.post("/api/v1/affiliations", json=payload)
     assert res2.status_code == 409
     data = res2.json()
     assert data["success"] is False
@@ -161,7 +161,7 @@ def test_get_user_affiliation_success(client, db_session):
     db_session.add(aff)
     db_session.commit()
 
-    response = client.get("/affiliations/users/usr-staff-101")
+    response = client.get("/api/v1/affiliations/users/usr-staff-101")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -174,7 +174,7 @@ def test_get_user_affiliation_success(client, db_session):
 def test_get_nonexistent_user_affiliation_rejected(client, db_session):
     """8. Get nonexistent user affiliation returns 404 AFFILIATION_NOT_FOUND."""
     seed_affiliation_base_data(db_session)
-    response = client.get("/affiliations/users/non-existent-user")
+    response = client.get("/api/v1/affiliations/users/non-existent-user")
     assert response.status_code == 404
     data = response.json()
     assert data["success"] is False
@@ -192,7 +192,7 @@ def test_get_affiliation_by_id(client, db_session):
     db_session.add(aff)
     db_session.commit()
 
-    response = client.get("/affiliations/aff-id-001")
+    response = client.get("/api/v1/affiliations/aff-id-001")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -207,7 +207,7 @@ def test_list_affiliations(client, db_session):
     db_session.add_all([aff1, aff2])
     db_session.commit()
 
-    response = client.get("/affiliations")
+    response = client.get("/api/v1/affiliations")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -221,7 +221,7 @@ def test_list_affiliations_filter_by_department(client, db_session):
     db_session.add_all([aff1, aff2])
     db_session.commit()
 
-    response = client.get("/affiliations?department_id=dept-cs-101")
+    response = client.get("/api/v1/affiliations?department_id=dept-cs-101")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -236,7 +236,7 @@ def test_list_affiliations_filter_by_faculty(client, db_session):
     db_session.add_all([aff1, aff2])
     db_session.commit()
 
-    response = client.get("/affiliations?faculty_id=fac-science-102")
+    response = client.get("/api/v1/affiliations?faculty_id=fac-science-102")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -251,7 +251,7 @@ def test_list_affiliations_filter_by_user(client, db_session):
     db_session.add_all([aff1, aff2])
     db_session.commit()
 
-    response = client.get("/affiliations?user_id=u-specific")
+    response = client.get("/api/v1/affiliations?user_id=u-specific")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -275,7 +275,7 @@ def test_update_department_successfully(client, db_session):
     db_session.commit()
 
     # Change to dept-se-103 (same faculty fac-comp-101)
-    response = client.put("/affiliations/aff-up-1", json={"department_id": "dept-se-103"})
+    response = client.put("/api/v1/affiliations/aff-up-1", json={"department_id": "dept-se-103"})
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -299,7 +299,7 @@ def test_transfer_user_department_and_synchronize_faculty(client, db_session):
     db_session.commit()
 
     # Transfer to Chemistry in Faculty of Science
-    response = client.put("/affiliations/aff-up-2", json={"department_id": "dept-chem-102"})
+    response = client.put("/api/v1/affiliations/aff-up-2", json={"department_id": "dept-chem-102"})
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -323,7 +323,7 @@ def test_invalid_department_during_update_rejected(client, db_session):
     db_session.add(aff)
     db_session.commit()
 
-    response = client.put("/affiliations/aff-up-3", json={"department_id": "non-existent-dept"})
+    response = client.put("/api/v1/affiliations/aff-up-3", json={"department_id": "non-existent-dept"})
     assert response.status_code == 404
     assert response.json()["error"]["code"] == "DEPARTMENT_NOT_FOUND"
 
@@ -340,7 +340,7 @@ def test_invalid_department_faculty_combination_during_update_rejected(client, d
     db_session.commit()
 
     # dept-chem-102 belongs to fac-science-102, but payload claims fac-comp-101
-    response = client.put("/affiliations/aff-up-4", json={
+    response = client.put("/api/v1/affiliations/aff-up-4", json={
         "department_id": "dept-chem-102",
         "faculty_id": "fac-comp-101"
     })
@@ -363,12 +363,12 @@ def test_delete_affiliation_success(client, db_session):
     db_session.add(aff)
     db_session.commit()
 
-    response = client.delete("/affiliations/aff-del-1")
+    response = client.delete("/api/v1/affiliations/aff-del-1")
     assert response.status_code == 200
     assert response.json()["success"] is True
 
     # 19. Deleted affiliation cannot be retrieved
-    get_res = client.get("/affiliations/aff-del-1")
+    get_res = client.get("/api/v1/affiliations/aff-del-1")
     assert get_res.status_code == 404
     assert get_res.json()["error"]["code"] == "AFFILIATION_NOT_FOUND"
 
@@ -390,7 +390,7 @@ def test_department_with_affiliations_cannot_be_deleted(client, db_session):
     seed_affiliation_base_data(db_session)
 
     # 20. Create department + affiliation
-    dept_res = client.post("/departments", json={
+    dept_res = client.post("/api/v1/departments", json={
         "code": "DEPT-PHYS",
         "name": "Department of Physics",
         "faculty_id": "fac-science-102"
@@ -398,7 +398,7 @@ def test_department_with_affiliations_cannot_be_deleted(client, db_session):
     assert dept_res.status_code == 201
     dept_id = dept_res.json()["data"]["id"]
 
-    aff_res = client.post("/affiliations", json={
+    aff_res = client.post("/api/v1/affiliations", json={
         "user_id": "usr-phys-student",
         "department_id": dept_id
     })
@@ -406,7 +406,7 @@ def test_department_with_affiliations_cannot_be_deleted(client, db_session):
     aff_id = aff_res.json()["data"]["id"]
 
     # 21. Attempt to delete department through USM-107 API
-    del_dept = client.delete(f"/departments/{dept_id}")
+    del_dept = client.delete(f"/api/v1/departments/{dept_id}")
 
     # 22. Rejected with 409; department and affiliation are untouched
     assert del_dept.status_code == 409
@@ -415,11 +415,11 @@ def test_department_with_affiliations_cannot_be_deleted(client, db_session):
     assert body["error"]["code"] == "DEPARTMENT_HAS_DEPENDENCIES"
     assert "1 affiliation(s)" in body["error"]["message"]
 
-    assert client.get(f"/departments/{dept_id}").status_code == 200
-    assert client.get(f"/affiliations/{aff_id}").status_code == 200
+    assert client.get(f"/api/v1/departments/{dept_id}").status_code == 200
+    assert client.get(f"/api/v1/affiliations/{aff_id}").status_code == 200
     assert db_session.query(UserAffiliation).filter(UserAffiliation.id == aff_id).first() is not None
 
     # 23. Once the dependent affiliation is removed, deletion succeeds
-    assert client.delete(f"/affiliations/{aff_id}").status_code == 200
-    assert client.delete(f"/departments/{dept_id}").status_code == 200
-    assert client.get(f"/departments/{dept_id}").status_code == 404
+    assert client.delete(f"/api/v1/affiliations/{aff_id}").status_code == 200
+    assert client.delete(f"/api/v1/departments/{dept_id}").status_code == 200
+    assert client.get(f"/api/v1/departments/{dept_id}").status_code == 404

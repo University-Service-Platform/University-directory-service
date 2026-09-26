@@ -16,7 +16,7 @@ def seed(db_session):
 
 
 def create(client, user_id="usr-syn-001", department_id="dept-syn-001"):
-    return client.post("/affiliations", json={"user_id": user_id, "department_id": department_id})
+    return client.post("/api/v1/affiliations", json={"user_id": user_id, "department_id": department_id})
 
 
 def assert_error(response, status_code, code):
@@ -64,7 +64,7 @@ def test_update_rechecks_user(client, db_session, identity_client):
     aff_id = create(client).json()["data"]["id"]
 
     identity_client.inactive.add("usr-syn-001")
-    response = client.put(f"/affiliations/{aff_id}", json={"department_id": "dept-syn-002"})
+    response = client.put(f"/api/v1/affiliations/{aff_id}", json={"department_id": "dept-syn-002"})
 
     assert_error(response, 409, "USER_INACTIVE")
     assert db_session.get(UserAffiliation, aff_id).department_id == "dept-syn-001"
@@ -73,7 +73,7 @@ def test_update_rechecks_user(client, db_session, identity_client):
 def test_update_succeeds_for_active_user(client, db_session, identity_client):
     seed(db_session)
     aff_id = create(client).json()["data"]["id"]
-    response = client.put(f"/affiliations/{aff_id}", json={"department_id": "dept-syn-002"})
+    response = client.put(f"/api/v1/affiliations/{aff_id}", json={"department_id": "dept-syn-002"})
     assert response.status_code == 200
     assert identity_client.calls == ["usr-syn-001", "usr-syn-001"]
 
@@ -82,6 +82,6 @@ def test_reads_do_not_call_identity(client, db_session, identity_client):
     seed(db_session)
     aff_id = create(client).json()["data"]["id"]
     identity_client.calls.clear()
-    assert client.get(f"/affiliations/{aff_id}").status_code == 200
-    assert client.get("/affiliations").status_code == 200
+    assert client.get(f"/api/v1/affiliations/{aff_id}").status_code == 200
+    assert client.get("/api/v1/affiliations").status_code == 200
     assert identity_client.calls == []

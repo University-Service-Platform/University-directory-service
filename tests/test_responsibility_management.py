@@ -26,7 +26,7 @@ def payload(**overrides):
 
 
 def create(client, **overrides):
-    return client.post("/responsibilities", json=payload(**overrides))
+    return client.post("/api/v1/responsibilities", json=payload(**overrides))
 
 
 def assert_error(response, status_code, code):
@@ -54,7 +54,7 @@ def test_create_responsibility(client, db_session, identity_client):
 
 def test_create_requires_an_organizational_target(client, db_session):
     seed(db_session)
-    response = client.post("/responsibilities", json={"user_id": "usr-syn-001", "role_title": "Floating"})
+    response = client.post("/api/v1/responsibilities", json={"user_id": "usr-syn-001", "role_title": "Floating"})
     assert_error(response, 422, "VALIDATION_ERROR")
 
 
@@ -125,18 +125,18 @@ def test_list_and_filter(client, db_session):
     create(client)
     create(client, user_id="usr-syn-002", status="INACTIVE")
 
-    assert len(client.get("/responsibilities").json()["data"]) == 2
-    active = client.get("/responsibilities", params={"status": "ACTIVE"}).json()["data"]
+    assert len(client.get("/api/v1/responsibilities").json()["data"]) == 2
+    active = client.get("/api/v1/responsibilities", params={"status": "ACTIVE"}).json()["data"]
     assert [r["user_id"] for r in active] == ["usr-syn-001"]
-    by_user = client.get("/responsibilities", params={"user_id": "usr-syn-002"}).json()["data"]
+    by_user = client.get("/api/v1/responsibilities", params={"user_id": "usr-syn-002"}).json()["data"]
     assert [r["status"] for r in by_user] == ["INACTIVE"]
 
 
 def test_get_by_id_and_not_found(client, db_session):
     seed(db_session)
     resp_id = create(client).json()["data"]["id"]
-    assert client.get(f"/responsibilities/{resp_id}").json()["data"]["id"] == resp_id
-    assert_error(client.get("/responsibilities/resp-missing"), 404, "RESPONSIBILITY_NOT_FOUND")
+    assert client.get(f"/api/v1/responsibilities/{resp_id}").json()["data"]["id"] == resp_id
+    assert_error(client.get("/api/v1/responsibilities/resp-missing"), 404, "RESPONSIBILITY_NOT_FOUND")
 
 
 def test_non_admin_can_read_but_not_write(client, anon_client, db_session):
@@ -144,10 +144,10 @@ def test_non_admin_can_read_but_not_write(client, anon_client, db_session):
     resp_id = create(client).json()["data"]["id"]
     headers = bearer(STAFF_TOKEN)
 
-    assert anon_client.get("/responsibilities", headers=headers).status_code == 200
-    assert anon_client.post("/responsibilities", json=payload(user_id="usr-x"), headers=headers).status_code == 403
-    assert anon_client.put(f"/responsibilities/{resp_id}", json={}, headers=headers).status_code == 403
-    assert anon_client.delete(f"/responsibilities/{resp_id}", headers=headers).status_code == 403
+    assert anon_client.get("/api/v1/responsibilities", headers=headers).status_code == 200
+    assert anon_client.post("/api/v1/responsibilities", json=payload(user_id="usr-x"), headers=headers).status_code == 403
+    assert anon_client.put(f"/api/v1/responsibilities/{resp_id}", json={}, headers=headers).status_code == 403
+    assert anon_client.delete(f"/api/v1/responsibilities/{resp_id}", headers=headers).status_code == 403
 
 
 # ----------------------------------------------------------------- update
@@ -155,7 +155,7 @@ def test_non_admin_can_read_but_not_write(client, anon_client, db_session):
 def test_update_title_and_scope(client, db_session):
     seed(db_session)
     resp_id = create(client).json()["data"]["id"]
-    response = client.put(f"/responsibilities/{resp_id}", json={"role_title": "Head of Unit", "department_id": "DSYN"})
+    response = client.put(f"/api/v1/responsibilities/{resp_id}", json={"role_title": "Head of Unit", "department_id": "DSYN"})
 
     assert response.status_code == 200
     data = response.json()["data"]
@@ -170,7 +170,7 @@ def test_deactivate_allowed_for_user_inactive_in_identity(client, db_session, id
     identity_client.inactive.add("usr-syn-001")
     identity_client.calls.clear()
 
-    response = client.put(f"/responsibilities/{resp_id}", json={"status": "INACTIVE"})
+    response = client.put(f"/api/v1/responsibilities/{resp_id}", json={"status": "INACTIVE"})
 
     assert response.status_code == 200
     assert response.json()["data"]["status"] == "INACTIVE"
@@ -182,17 +182,17 @@ def test_reactivation_rechecks_user_and_duplicates(client, db_session, identity_
     old_id = create(client, status="INACTIVE").json()["data"]["id"]
     create(client)  # the active one
 
-    assert_error(client.put(f"/responsibilities/{old_id}", json={"status": "ACTIVE"}), 409, "RESPONSIBILITY_ALREADY_EXISTS")
+    assert_error(client.put(f"/api/v1/responsibilities/{old_id}", json={"status": "ACTIVE"}), 409, "RESPONSIBILITY_ALREADY_EXISTS")
 
     identity_client.inactive.add("usr-syn-002")
     other_id = create(client, user_id="usr-syn-002", status="INACTIVE").json()["data"]["id"]
-    assert_error(client.put(f"/responsibilities/{other_id}", json={"status": "ACTIVE"}), 409, "USER_INACTIVE")
+    assert_error(client.put(f"/api/v1/responsibilities/{other_id}", json={"status": "ACTIVE"}), 409, "USER_INACTIVE")
 
 
 def test_update_rejects_unknown_unit(client, db_session):
     seed(db_session)
     resp_id = create(client).json()["data"]["id"]
-    assert_error(client.put(f"/responsibilities/{resp_id}", json={"service_unit_id": "unit-missing"}), 404, "SERVICE_UNIT_NOT_FOUND")
+    assert_error(client.put(f"/api/v1/responsibilities/{resp_id}", json={"service_unit_id": "unit-missing"}), 404, "SERVICE_UNIT_NOT_FOUND")
 
 
 # ----------------------------------------------------------------- delete
@@ -202,13 +202,13 @@ def test_delete_responsibility(client, db_session, identity_client):
     resp_id = create(client).json()["data"]["id"]
     identity_client.inactive.add("usr-syn-001")  # deleting never needs the Identity Service
 
-    assert client.delete(f"/responsibilities/{resp_id}").status_code == 200
-    assert_error(client.get(f"/responsibilities/{resp_id}"), 404, "RESPONSIBILITY_NOT_FOUND")
+    assert client.delete(f"/api/v1/responsibilities/{resp_id}").status_code == 200
+    assert_error(client.get(f"/api/v1/responsibilities/{resp_id}"), 404, "RESPONSIBILITY_NOT_FOUND")
 
 
 def test_created_responsibility_passes_existing_validation_endpoint(client, db_session):
     seed(db_session)
     create(client)
-    response = client.get("/validation/users/usr-syn-001/responsibilities", params={"service_unit_id": "unit-syn-001"})
+    response = client.get("/api/v1/validation/users/usr-syn-001/responsibilities", params={"service_unit_id": "unit-syn-001"})
     assert response.status_code == 200
     assert response.json()["data"]["is_valid"] is True

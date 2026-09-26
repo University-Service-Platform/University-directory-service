@@ -43,15 +43,15 @@ def assert_conflict(response, code):
 
 def test_faculty_with_departments_rejected(client, db_session):
     seed(db_session)
-    message = assert_conflict(client.delete("/faculties/fac-syn-001"), "FACULTY_HAS_DEPENDENCIES")
+    message = assert_conflict(client.delete("/api/v1/faculties/fac-syn-001"), "FACULTY_HAS_DEPENDENCIES")
     assert "2 department(s)" in message
     assert db_session.query(Department).filter(Department.faculty_id == "fac-syn-001").count() == 2
 
 
 def test_faculty_without_dependencies_deleted(client, db_session):
     seed(db_session)
-    assert client.delete("/faculties/fac-empty-002").status_code == 200
-    assert client.get("/faculties/fac-empty-002").status_code == 404
+    assert client.delete("/api/v1/faculties/fac-empty-002").status_code == 200
+    assert client.get("/api/v1/faculties/fac-empty-002").status_code == 404
 
 
 def test_department_with_affiliations_rejected(client, db_session):
@@ -61,31 +61,31 @@ def test_department_with_affiliations_rejected(client, db_session):
     ))
     db_session.commit()
 
-    assert_conflict(client.delete("/departments/dept-syn-001"), "DEPARTMENT_HAS_DEPENDENCIES")
+    assert_conflict(client.delete("/api/v1/departments/dept-syn-001"), "DEPARTMENT_HAS_DEPENDENCIES")
     assert db_session.query(UserAffiliation).count() == 1
 
 
 def test_department_with_responsibilities_rejected(client, db_session):
     seed(db_session)
     add_responsibility(db_session, department_id="dept-syn-001")
-    message = assert_conflict(client.delete("/departments/dept-syn-001"), "DEPARTMENT_HAS_DEPENDENCIES")
+    message = assert_conflict(client.delete("/api/v1/departments/dept-syn-001"), "DEPARTMENT_HAS_DEPENDENCIES")
     assert "1 responsibility(ies)" in message
 
 
 def test_department_without_dependencies_deleted(client, db_session):
     seed(db_session)
-    assert client.delete("/departments/dept-free-002").status_code == 200
-    assert client.get("/departments/dept-free-002").status_code == 404
+    assert client.delete("/api/v1/departments/dept-free-002").status_code == 200
+    assert client.get("/api/v1/departments/dept-free-002").status_code == 404
 
 
 def test_service_unit_with_responsibilities_rejected(client, db_session):
     seed(db_session)
     add_responsibility(db_session, service_unit_id="unit-syn-001")
-    assert_conflict(client.delete("/service-units/unit-syn-001"), "SERVICE_UNIT_HAS_DEPENDENCIES")
+    assert_conflict(client.delete("/api/v1/service-units/unit-syn-001"), "SERVICE_UNIT_HAS_DEPENDENCIES")
     assert db_session.query(ServiceResponsibility).count() == 1
 
 
 def test_service_unit_without_dependencies_deleted(client, db_session):
     seed(db_session)
-    assert client.delete("/service-units/unit-free-002").status_code == 200
-    assert client.get("/service-units/unit-free-002").status_code == 404
+    assert client.delete("/api/v1/service-units/unit-free-002").status_code == 200
+    assert client.get("/api/v1/service-units/unit-free-002").status_code == 404

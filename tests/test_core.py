@@ -44,7 +44,7 @@ def test_utc_now_is_timezone_aware():
 
 
 def test_request_validation_error_uses_project_format(client):
-    response = client.post("/faculties", json={"name": "Synthetic Faculty"})
+    response = client.post("/api/v1/faculties", json={"name": "Synthetic Faculty"})
 
     assert response.status_code == 422
     body = response.json()

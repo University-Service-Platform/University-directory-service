@@ -24,7 +24,7 @@ def test_create_service_unit_success(client, db_session):
         "name": "Health Centre",
         "description": "Campus healthcare services"
     }
-    response = client.post("/service-units", json=payload)
+    response = client.post("/api/v1/service-units", json=payload)
     assert response.status_code == 201
     data = response.json()
     assert data["success"] is True
@@ -45,7 +45,7 @@ def test_create_service_unit_duplicate_code_rejected(client, db_session):
         "name": "Another Library",
         "description": "Duplicate service unit code attempt"
     }
-    response = client.post("/service-units", json=payload)
+    response = client.post("/api/v1/service-units", json=payload)
     assert response.status_code == 409
     data = response.json()
     assert data["success"] is False
@@ -57,12 +57,12 @@ def test_create_service_unit_malformed_code_rejected(client, db_session):
         "name": "Invalid Service Unit",
         "description": "Malformed code attempt"
     }
-    response = client.post("/service-units", json=payload)
+    response = client.post("/api/v1/service-units", json=payload)
     assert response.status_code in [400, 422]
 
 def test_list_service_units(client, db_session):
     seed_service_unit_data(db_session)
-    response = client.get("/service-units")
+    response = client.get("/api/v1/service-units")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -73,7 +73,7 @@ def test_list_service_units(client, db_session):
 
 def test_list_service_units_pagination(client, db_session):
     seed_service_unit_data(db_session)
-    response = client.get("/service-units?skip=1&limit=1")
+    response = client.get("/api/v1/service-units?skip=1&limit=1")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -81,7 +81,7 @@ def test_list_service_units_pagination(client, db_session):
 
 def test_get_service_unit_by_id(client, db_session):
     seed_service_unit_data(db_session)
-    response = client.get("/service-units/unit-lib-001")
+    response = client.get("/api/v1/service-units/unit-lib-001")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -92,7 +92,7 @@ def test_get_service_unit_by_id(client, db_session):
 def test_get_service_unit_by_code(client, db_session):
     seed_service_unit_data(db_session)
     # Testing case normalization
-    response = client.get("/service-units/its")
+    response = client.get("/api/v1/service-units/its")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -100,14 +100,14 @@ def test_get_service_unit_by_code(client, db_session):
     assert data["data"]["code"] == "ITS"
 
 def test_get_service_unit_not_found(client, db_session):
-    response = client.get("/service-units/NONEXISTENT")
+    response = client.get("/api/v1/service-units/NONEXISTENT")
     assert response.status_code == 404
     data = response.json()
     assert data["success"] is False
     assert data["error"]["code"] == "SERVICE_UNIT_NOT_FOUND"
 
 def test_get_service_unit_invalid_identifier_format(client, db_session):
-    response = client.get("/service-units/*invalid*id!")
+    response = client.get("/api/v1/service-units/*invalid*id!")
     assert response.status_code == 400
     data = response.json()
     assert data["success"] is False
@@ -120,7 +120,7 @@ def test_update_service_unit_success(client, db_session):
         "description": "Expanded university central library",
         "code": "ULIB"
     }
-    response = client.put("/service-units/unit-lib-001", json=payload)
+    response = client.put("/api/v1/service-units/unit-lib-001", json=payload)
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -138,7 +138,7 @@ def test_update_service_unit_duplicate_code_rejected(client, db_session):
     payload = {
         "code": "ITS"  # already taken by unit-its-002
     }
-    response = client.put("/service-units/unit-lib-001", json=payload)
+    response = client.put("/api/v1/service-units/unit-lib-001", json=payload)
     assert response.status_code == 409
     data = response.json()
     assert data["success"] is False
@@ -146,7 +146,7 @@ def test_update_service_unit_duplicate_code_rejected(client, db_session):
 
 def test_update_service_unit_not_found(client, db_session):
     payload = {"name": "Nonexistent Unit"}
-    response = client.put("/service-units/NONEXISTENT", json=payload)
+    response = client.put("/api/v1/service-units/NONEXISTENT", json=payload)
     assert response.status_code == 404
     data = response.json()
     assert data["success"] is False
@@ -154,7 +154,7 @@ def test_update_service_unit_not_found(client, db_session):
 
 def test_delete_service_unit_success(client, db_session):
     seed_service_unit_data(db_session)
-    response = client.delete("/service-units/unit-lib-001")
+    response = client.delete("/api/v1/service-units/unit-lib-001")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -165,7 +165,7 @@ def test_delete_service_unit_success(client, db_session):
     assert db_unit is None
 
 def test_delete_service_unit_not_found(client, db_session):
-    response = client.delete("/service-units/NONEXISTENT")
+    response = client.delete("/api/v1/service-units/NONEXISTENT")
     assert response.status_code == 404
     data = response.json()
     assert data["success"] is False
@@ -188,7 +188,7 @@ def test_service_unit_crud_independence_from_faculties(client, db_session):
         "name": "Finance Department / Office",
         "description": "Central Financial Services"
     }
-    res_unit = client.post("/service-units", json=payload)
+    res_unit = client.post("/api/v1/service-units", json=payload)
     assert res_unit.status_code == 201
 
     # Ensure faculty remains intact
@@ -197,6 +197,6 @@ def test_service_unit_crud_independence_from_faculties(client, db_session):
     assert fac_db.code == "FSC"
 
     # Ensure faculty validation endpoint still works independently
-    res_val = client.get("/validation/faculties/FSC")
+    res_val = client.get("/api/v1/validation/faculties/FSC")
     assert res_val.status_code == 200
     assert res_val.json()["data"]["code"] == "FSC"

@@ -24,7 +24,7 @@ def test_directory_health_check(client):
 
 def test_validate_faculty_by_id(client, db_session):
     seed_faculties(db_session)
-    response = client.get("/validation/faculties/fac-science-001")
+    response = client.get("/api/v1/validation/faculties/fac-science-001")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -35,7 +35,7 @@ def test_validate_faculty_by_id(client, db_session):
 
 def test_validate_faculty_by_code(client, db_session):
     seed_faculties(db_session)
-    response = client.get("/validation/faculties/FMD")
+    response = client.get("/api/v1/validation/faculties/FMD")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -44,7 +44,7 @@ def test_validate_faculty_by_code(client, db_session):
 
 def test_validate_unknown_faculty(client, db_session):
     seed_faculties(db_session)
-    response = client.get("/validation/faculties/non-existent-fac")
+    response = client.get("/api/v1/validation/faculties/non-existent-fac")
     assert response.status_code == 404
     data = response.json()
     assert data["success"] is False
@@ -52,7 +52,7 @@ def test_validate_unknown_faculty(client, db_session):
 
 def test_validate_malformed_faculty_id(client, db_session):
     seed_faculties(db_session)
-    response = client.get("/validation/faculties/a")
+    response = client.get("/api/v1/validation/faculties/a")
     assert response.status_code == 400
     data = response.json()
     assert data["success"] is False
