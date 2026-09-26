@@ -1,8 +1,9 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-import os
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./directory.db")
+from app.config import get_settings
+
+DATABASE_URL = get_settings().database_url
 
 engine = create_engine(
     DATABASE_URL,
