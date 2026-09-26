@@ -31,3 +31,19 @@ class ServiceResponsibilityRepository:
             query = query.filter(ServiceResponsibility.faculty_id == faculty_id)
 
         return query.all()
+
+    def count_referencing(
+        self,
+        service_unit_id: Optional[str] = None,
+        department_id: Optional[str] = None,
+        faculty_id: Optional[str] = None
+    ) -> int:
+        """Count responsibilities (any status) referencing the given unit, department or faculty."""
+        query = self.db.query(ServiceResponsibility)
+        if service_unit_id:
+            query = query.filter(ServiceResponsibility.service_unit_id == service_unit_id)
+        if department_id:
+            query = query.filter(ServiceResponsibility.department_id == department_id)
+        if faculty_id:
+            query = query.filter(ServiceResponsibility.faculty_id == faculty_id)
+        return query.count()

@@ -13,9 +13,9 @@ class ServiceResponsibility(Base):
 
     id = Column(String(36), primary_key=True, index=True)
     user_id = Column(String(36), index=True, nullable=False)
-    service_unit_id = Column(String(36), ForeignKey("service_units.id", ondelete="CASCADE"), nullable=True)
-    department_id = Column(String(36), ForeignKey("departments.id", ondelete="CASCADE"), nullable=True)
-    faculty_id = Column(String(36), ForeignKey("faculties.id", ondelete="CASCADE"), nullable=True)
+    service_unit_id = Column(String(36), ForeignKey("service_units.id", ondelete="RESTRICT"), nullable=True)
+    department_id = Column(String(36), ForeignKey("departments.id", ondelete="RESTRICT"), nullable=True)
+    faculty_id = Column(String(36), ForeignKey("faculties.id", ondelete="RESTRICT"), nullable=True)
     role_title = Column(String(100), nullable=False)
     status = Column(SQLEnum(ResponsibilityStatus), default=ResponsibilityStatus.ACTIVE, nullable=False)
     created_at = Column(DateTime, default=utc_now)

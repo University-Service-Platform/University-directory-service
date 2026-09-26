@@ -7,15 +7,17 @@ from app.core.errors import AppError
 from app.core.time import utc_now
 from app.core.validators import ensure_code
 from app.models.service_unit import ServiceUnit
+from app.repositories.responsibility_repository import ServiceResponsibilityRepository
 from app.repositories.service_unit_repository import ServiceUnitRepository
 from app.schemas.service_unit import ServiceUnitCreate, ServiceUnitUpdate, ServiceUnitResponse
-from app.services.lookups import DirectoryLookup
+from app.services.lookups import DirectoryLookup, ensure_no_dependencies
 
 class ServiceUnitManagementService:
     def __init__(self, db: Session):
         self.db = db
         self.repository = ServiceUnitRepository(db)
         self.lookup = DirectoryLookup(db)
+        self.responsibilities = ServiceResponsibilityRepository(db)
 
     def _to_response(self, service_unit: ServiceUnit) -> ServiceUnitResponse:
         return ServiceUnitResponse(
@@ -78,4 +80,11 @@ class ServiceUnitManagementService:
 
     def delete_service_unit(self, service_unit_id: str) -> None:
         unit = self.lookup.service_unit(service_unit_id)
+        ensure_no_dependencies(
+            "SERVICE_UNIT_HAS_DEPENDENCIES",
+            f"Service unit '{unit.code}'",
+            {
+                "responsibility(ies)": self.responsibilities.count_referencing(service_unit_id=unit.id),
+            },
+        )
         self.repository.delete(unit)

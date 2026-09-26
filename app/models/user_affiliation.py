@@ -8,8 +8,8 @@ class UserAffiliation(Base):
 
     id = Column(String(36), primary_key=True, index=True)
     user_id = Column(String(50), index=True, nullable=False)
-    department_id = Column(String(36), ForeignKey("departments.id", ondelete="CASCADE"), nullable=False)
-    faculty_id = Column(String(36), ForeignKey("faculties.id", ondelete="CASCADE"), nullable=False)
+    department_id = Column(String(36), ForeignKey("departments.id", ondelete="RESTRICT"), nullable=False)
+    faculty_id = Column(String(36), ForeignKey("faculties.id", ondelete="RESTRICT"), nullable=False)
     created_at = Column(DateTime, default=utc_now)
     updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
 

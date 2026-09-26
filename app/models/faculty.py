@@ -12,4 +12,4 @@ class Faculty(Base):
     description = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=utc_now)
 
-    departments = relationship("Department", back_populates="faculty", cascade="all, delete-orphan")
+    departments = relationship("Department", back_populates="faculty", passive_deletes="all")

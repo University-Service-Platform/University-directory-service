@@ -1,3 +1,5 @@
+from typing import Dict
+
 from fastapi import status
 from sqlalchemy.orm import Session
 
@@ -63,4 +65,16 @@ def ensure_department_in_faculty(department: Department, faculty: Faculty) -> No
             status.HTTP_400_BAD_REQUEST,
             "INVALID_ORGANIZATIONAL_RELATIONSHIP",
             f"Department '{department.name}' does not belong to the specified Faculty '{faculty.name}'.",
+        )
+
+
+def ensure_no_dependencies(error_code: str, entity_label: str, counts: Dict[str, int]) -> None:
+    """Raise 409 when any dependent record still references the entity being deleted."""
+    present = [f"{count} {name}" for name, count in counts.items() if count]
+    if present:
+        raise AppError(
+            status.HTTP_409_CONFLICT,
+            error_code,
+            f"{entity_label} cannot be deleted while dependent records exist: {', '.join(present)}. "
+            "Remove or reassign them first.",
         )

@@ -36,6 +36,9 @@ class DepartmentRepository:
             query = query.filter(Department.faculty_id == faculty_id)
         return query.offset(skip).limit(limit).all()
 
+    def count_by_faculty(self, faculty_id: str) -> int:
+        return self.db.query(Department).filter(Department.faculty_id == faculty_id).count()
+
     def create(self, department: Department) -> Department:
         self.db.add(department)
         self.db.commit()

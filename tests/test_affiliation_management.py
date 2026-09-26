@@ -377,14 +377,15 @@ def test_delete_affiliation_success(client, db_session):
     assert db_aff is None
 
 # ==============================================================================
-# CASCADE & INTEGRATION TESTS
+# DELETE PROTECTION & INTEGRATION TESTS
 # ==============================================================================
 
-def test_department_deletion_cascades_affiliations(client, db_session):
+def test_department_with_affiliations_cannot_be_deleted(client, db_session):
     """
     20. Create department + affiliation.
-    21. Delete department through the existing USM-107 functionality.
-    22. Verify the affiliation is removed through the department cascade.
+    21. Attempt to delete the department through the USM-107 API.
+    22. Verify 409 DEPARTMENT_HAS_DEPENDENCIES and that nothing was cascade-deleted.
+    23. Remove the affiliation, then the department delete succeeds.
     """
     seed_affiliation_base_data(db_session)
 
@@ -404,19 +405,21 @@ def test_department_deletion_cascades_affiliations(client, db_session):
     assert aff_res.status_code == 201
     aff_id = aff_res.json()["data"]["id"]
 
-    # Verify affiliation exists
-    get_aff1 = client.get(f"/affiliations/{aff_id}")
-    assert get_aff1.status_code == 200
-
-    # 21. Delete department through USM-107 API
+    # 21. Attempt to delete department through USM-107 API
     del_dept = client.delete(f"/departments/{dept_id}")
-    assert del_dept.status_code == 200
 
-    # 22. Verify the affiliation is removed through cascade
-    get_aff2 = client.get(f"/affiliations/{aff_id}")
-    assert get_aff2.status_code == 404
-    assert get_aff2.json()["error"]["code"] == "AFFILIATION_NOT_FOUND"
+    # 22. Rejected with 409; department and affiliation are untouched
+    assert del_dept.status_code == 409
+    body = del_dept.json()
+    assert body["success"] is False
+    assert body["error"]["code"] == "DEPARTMENT_HAS_DEPENDENCIES"
+    assert "1 affiliation(s)" in body["error"]["message"]
 
-    # Direct DB verification
-    db_aff = db_session.query(UserAffiliation).filter(UserAffiliation.id == aff_id).first()
-    assert db_aff is None
+    assert client.get(f"/departments/{dept_id}").status_code == 200
+    assert client.get(f"/affiliations/{aff_id}").status_code == 200
+    assert db_session.query(UserAffiliation).filter(UserAffiliation.id == aff_id).first() is not None
+
+    # 23. Once the dependent affiliation is removed, deletion succeeds
+    assert client.delete(f"/affiliations/{aff_id}").status_code == 200
+    assert client.delete(f"/departments/{dept_id}").status_code == 200
+    assert client.get(f"/departments/{dept_id}").status_code == 404

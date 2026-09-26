@@ -7,15 +7,19 @@ from app.core.errors import AppError
 from app.core.time import utc_now
 from app.core.validators import ensure_code
 from app.models.faculty import Faculty
+from app.repositories.affiliation_repository import AffiliationRepository
 from app.repositories.faculty_repository import FacultyRepository
+from app.repositories.responsibility_repository import ServiceResponsibilityRepository
 from app.schemas.faculty import FacultyCreate, FacultyUpdate, FacultyResponse
-from app.services.lookups import DirectoryLookup
+from app.services.lookups import DirectoryLookup, ensure_no_dependencies
 
 class FacultyManagementService:
     def __init__(self, db: Session):
         self.db = db
         self.repository = FacultyRepository(db)
         self.lookup = DirectoryLookup(db)
+        self.affiliations = AffiliationRepository(db)
+        self.responsibilities = ServiceResponsibilityRepository(db)
 
     def _to_response(self, faculty: Faculty) -> FacultyResponse:
         return FacultyResponse(
@@ -78,4 +82,13 @@ class FacultyManagementService:
 
     def delete_faculty(self, faculty_id: str) -> None:
         faculty = self.lookup.faculty(faculty_id)
+        ensure_no_dependencies(
+            "FACULTY_HAS_DEPENDENCIES",
+            f"Faculty '{faculty.code}'",
+            {
+                "department(s)": self.lookup.departments.count_by_faculty(faculty.id),
+                "affiliation(s)": self.affiliations.count_by_faculty(faculty.id),
+                "responsibility(ies)": self.responsibilities.count_referencing(faculty_id=faculty.id),
+            },
+        )
         self.repository.delete(faculty)

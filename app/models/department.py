@@ -9,10 +9,10 @@ class Department(Base):
     id = Column(String(36), primary_key=True, index=True)
     code = Column(String(20), unique=True, index=True, nullable=False)
     name = Column(String(100), nullable=False)
-    faculty_id = Column(String(36), ForeignKey("faculties.id", ondelete="CASCADE"), nullable=False)
+    faculty_id = Column(String(36), ForeignKey("faculties.id", ondelete="RESTRICT"), nullable=False)
     created_at = Column(DateTime, default=utc_now)
     updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
 
     faculty = relationship("Faculty", back_populates="departments")
-    affiliations = relationship("UserAffiliation", cascade="all, delete-orphan", back_populates="department")
+    affiliations = relationship("UserAffiliation", back_populates="department", passive_deletes="all")
 

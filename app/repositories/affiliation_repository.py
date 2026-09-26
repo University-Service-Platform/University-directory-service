@@ -66,6 +66,12 @@ class AffiliationRepository:
 
         return query.offset(skip).limit(limit).all()
 
+    def count_by_department(self, department_id: str) -> int:
+        return self.db.query(UserAffiliation).filter(UserAffiliation.department_id == department_id).count()
+
+    def count_by_faculty(self, faculty_id: str) -> int:
+        return self.db.query(UserAffiliation).filter(UserAffiliation.faculty_id == faculty_id).count()
+
     def create(self, affiliation: UserAffiliation) -> UserAffiliation:
         self.db.add(affiliation)
         self.db.commit()

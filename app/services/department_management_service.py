@@ -7,15 +7,19 @@ from app.core.errors import AppError
 from app.core.time import utc_now
 from app.core.validators import ensure_code
 from app.models.department import Department
+from app.repositories.affiliation_repository import AffiliationRepository
 from app.repositories.department_repository import DepartmentRepository
+from app.repositories.responsibility_repository import ServiceResponsibilityRepository
 from app.schemas.department import DepartmentCreate, DepartmentUpdate, DepartmentResponse
-from app.services.lookups import DirectoryLookup
+from app.services.lookups import DirectoryLookup, ensure_no_dependencies
 
 class DepartmentManagementService:
     def __init__(self, db: Session):
         self.db = db
         self.repository = DepartmentRepository(db)
         self.lookup = DirectoryLookup(db)
+        self.affiliations = AffiliationRepository(db)
+        self.responsibilities = ServiceResponsibilityRepository(db)
 
     def _to_response(self, department: Department) -> DepartmentResponse:
         return DepartmentResponse(
@@ -87,4 +91,12 @@ class DepartmentManagementService:
 
     def delete_department(self, department_id: str) -> None:
         dept = self.lookup.department(department_id)
+        ensure_no_dependencies(
+            "DEPARTMENT_HAS_DEPENDENCIES",
+            f"Department '{dept.code}'",
+            {
+                "affiliation(s)": self.affiliations.count_by_department(dept.id),
+                "responsibility(ies)": self.responsibilities.count_referencing(department_id=dept.id),
+            },
+        )
         self.repository.delete(dept)
