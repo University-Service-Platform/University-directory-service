@@ -6,6 +6,7 @@ from app.routes.faculties import router as faculties_router
 from app.routes.service_units import router as service_units_router
 from app.routes.departments import router as departments_router
 from app.routes.affiliations import router as affiliations_router
+from app.routes.responsibilities import router as responsibilities_router
 import app.models  # noqa: F401  (register all models)
 
 # The schema is managed by Alembic: run `alembic upgrade head` before starting.
@@ -26,3 +27,4 @@ app.include_router(faculties_router)
 app.include_router(service_units_router)
 app.include_router(departments_router)
 app.include_router(affiliations_router)
+app.include_router(responsibilities_router)
