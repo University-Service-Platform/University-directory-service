@@ -1,0 +1,36 @@
+# Local development only. Values come from your shell or a local .env file
+# (copy .env.example to .env). Nothing secret is stored here.
+#
+# The Identity Service is a separate repository/deployment; point
+# IDENTITY_SERVICE_BASE_URL at wherever it runs (for example
+# http://host.docker.internal:8001 when it runs on the host).
+
+services:
+  directory-service:
+    build: .
+    image: university-directory-service:local
+    ports:
+      - "${DIRECTORY_SERVICE_PORT:-8002}:8002"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-sqlite:////app/data/directory.db}
+      IDENTITY_SERVICE_BASE_URL: ${IDENTITY_SERVICE_BASE_URL:?Set IDENTITY_SERVICE_BASE_URL}
+      IDENTITY_TIMEOUT_CONNECT: ${IDENTITY_TIMEOUT_CONNECT:-3}
+      IDENTITY_TIMEOUT_READ: ${IDENTITY_TIMEOUT_READ:-5}
+      AUTH_MODE: ${AUTH_MODE:-identity-hs256}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-}
+      JWT_ISSUER: ${JWT_ISSUER:-}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-}
+      JWKS_URL: ${JWKS_URL:-}
+      JWKS_CACHE_TTL_SECONDS: ${JWKS_CACHE_TTL_SECONDS:-300}
+    volumes:
+      - directory-data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8002/health', timeout=4)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  directory-data:
