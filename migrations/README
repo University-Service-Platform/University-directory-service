@@ -1,0 +1,6 @@
+Alembic migrations for the Directory Service.
+
+The database URL comes from the DATABASE_URL environment variable (see app/config.py).
+
+    alembic upgrade head          # apply all migrations
+    alembic revision --autogenerate -m "describe change"
