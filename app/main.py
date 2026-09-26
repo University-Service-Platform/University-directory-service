@@ -1,5 +1,5 @@
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI
+from app.core.errors import register_exception_handlers
 from app.database import engine, Base
 from app.routes.validation import router as validation_router
 from app.routes.health import router as health_router
@@ -20,33 +20,7 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-@app.exception_handler(HTTPException)
-async def custom_http_exception_handler(request: Request, exc: HTTPException):
-    if isinstance(exc.detail, dict) and "success" in exc.detail:
-        return JSONResponse(status_code=exc.status_code, content=exc.detail)
-    
-    code = "HTTP_ERROR"
-    if exc.status_code == 400:
-        code = "BAD_REQUEST"
-    elif exc.status_code == 401:
-        code = "UNAUTHORIZED"
-    elif exc.status_code == 403:
-        code = "FORBIDDEN"
-    elif exc.status_code == 404:
-        code = "NOT_FOUND"
-    elif exc.status_code == 409:
-        code = "CONFLICT"
-
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={
-            "success": False,
-            "error": {
-                "code": code,
-                "message": str(exc.detail)
-            }
-        }
-    )
+register_exception_handlers(app)
 
 app.include_router(health_router)
 app.include_router(validation_router)
@@ -54,5 +28,3 @@ app.include_router(faculties_router)
 app.include_router(service_units_router)
 app.include_router(departments_router)
 app.include_router(affiliations_router)
-
-

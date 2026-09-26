@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from app.core.time import utc_now
 from app.database import Base
 
 class UserAffiliation(Base):
@@ -10,8 +10,8 @@ class UserAffiliation(Base):
     user_id = Column(String(50), index=True, nullable=False)
     department_id = Column(String(36), ForeignKey("departments.id", ondelete="CASCADE"), nullable=False)
     faculty_id = Column(String(36), ForeignKey("faculties.id", ondelete="CASCADE"), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
 
     department = relationship("Department", back_populates="affiliations")
     faculty = relationship("Faculty")

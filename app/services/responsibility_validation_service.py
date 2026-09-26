@@ -1,7 +1,8 @@
 from sqlalchemy.orm import Session
-from fastapi import HTTPException, status
-import re
+from fastapi import status
 from typing import Optional, List
+from app.core.errors import AppError
+from app.core.validators import ensure_identifier
 from app.repositories.responsibility_repository import ServiceResponsibilityRepository
 from app.models.service_responsibility import ResponsibilityStatus
 from app.schemas.responsibility_validation import (
@@ -13,13 +14,6 @@ class ServiceResponsibilityValidationService:
     def __init__(self, db: Session):
         self.repository = ServiceResponsibilityRepository(db)
 
-    @staticmethod
-    def validate_identifier_format(identifier: str) -> bool:
-        if not identifier or not isinstance(identifier, str):
-            return False
-        pattern = r"^[a-zA-Z0-9_-]{2,50}$"
-        return bool(re.match(pattern, identifier.strip()))
-
     def validate_user_responsibilities(
         self,
         user_id: str,
@@ -28,17 +22,7 @@ class ServiceResponsibilityValidationService:
         faculty_id: Optional[str] = None
     ) -> UserResponsibilityValidationData:
         # Step 1: Format validation
-        if not self.validate_identifier_format(user_id):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail={
-                    "success": False,
-                    "error": {
-                        "code": "INVALID_IDENTIFIER_FORMAT",
-                        "message": f"User identifier '{user_id}' has an invalid format."
-                    }
-                }
-            )
+        ensure_identifier(user_id, "User")
 
         # Step 2: Retrieve actual responsibility relationship records
         records = self.repository.get_by_user_id(
@@ -49,15 +33,10 @@ class ServiceResponsibilityValidationService:
         )
 
         if not records:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail={
-                    "success": False,
-                    "error": {
-                        "code": "RESPONSIBILITY_NOT_FOUND",
-                        "message": f"No active responsibility relationship exists for user '{user_id}' matching the requested criteria."
-                    }
-                }
+            raise AppError(
+                status.HTTP_404_NOT_FOUND,
+                "RESPONSIBILITY_NOT_FOUND",
+                f"No active responsibility relationship exists for user '{user_id}' matching the requested criteria."
             )
 
         # Step 3: Build response records
@@ -84,15 +63,10 @@ class ServiceResponsibilityValidationService:
             )
 
         if not has_active:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail={
-                    "success": False,
-                    "error": {
-                        "code": "RESPONSIBILITY_INACTIVE",
-                        "message": f"Service responsibility relationship for user '{user_id}' is inactive."
-                    }
-                }
+            raise AppError(
+                status.HTTP_403_FORBIDDEN,
+                "RESPONSIBILITY_INACTIVE",
+                f"Service responsibility relationship for user '{user_id}' is inactive."
             )
 
         return UserResponsibilityValidationData(

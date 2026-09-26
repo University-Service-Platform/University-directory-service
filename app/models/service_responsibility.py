@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, DateTime, ForeignKey, Enum as SQLEnum
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from app.core.time import utc_now
 import enum
 from app.database import Base
 
@@ -18,8 +18,8 @@ class ServiceResponsibility(Base):
     faculty_id = Column(String(36), ForeignKey("faculties.id", ondelete="CASCADE"), nullable=True)
     role_title = Column(String(100), nullable=False)
     status = Column(SQLEnum(ResponsibilityStatus), default=ResponsibilityStatus.ACTIVE, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
 
     service_unit = relationship("ServiceUnit")
     department = relationship("Department")
