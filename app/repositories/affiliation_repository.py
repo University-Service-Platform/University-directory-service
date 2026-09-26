@@ -66,6 +66,26 @@ class AffiliationRepository:
 
         return query.offset(skip).limit(limit).all()
 
+    def find_for_user(
+        self,
+        user_id: str,
+        department_id: Optional[str] = None,
+        faculty_id: Optional[str] = None
+    ) -> List[UserAffiliation]:
+        query = (
+            self.db.query(UserAffiliation)
+            .options(
+                joinedload(UserAffiliation.department),
+                joinedload(UserAffiliation.faculty)
+            )
+            .filter(UserAffiliation.user_id == user_id)
+        )
+        if department_id:
+            query = query.filter(UserAffiliation.department_id == department_id)
+        if faculty_id:
+            query = query.filter(UserAffiliation.faculty_id == faculty_id)
+        return query.order_by(UserAffiliation.created_at, UserAffiliation.id).all()
+
     def count_by_department(self, department_id: str) -> int:
         return self.db.query(UserAffiliation).filter(UserAffiliation.department_id == department_id).count()
 

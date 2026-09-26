@@ -11,6 +11,8 @@ from app.schemas.faculty import FacultyValidationResponse
 from app.schemas.department_validation import DepartmentValidationResponse
 from app.schemas.service_unit_validation import ServiceUnitValidationResponse
 from app.schemas.responsibility_validation import UserResponsibilityValidationResponse
+from app.services.affiliation_validation_service import AffiliationValidationService
+from app.schemas.affiliation_validation import UserAffiliationValidationResponse
 
 router = APIRouter(tags=["Directory Validation"], dependencies=[Depends(get_current_user)])
 
@@ -81,3 +83,25 @@ def validate_user_responsibilities(
         faculty_id=faculty_id
     )
     return UserResponsibilityValidationResponse(success=True, data=validation_data)
+
+@router.get(
+    "/validation/users/{user_id}/affiliation",
+    response_model=UserAffiliationValidationResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Validate User Affiliation",
+    description="Validate that a user is affiliated with the given department and/or faculty (identifier or code). "
+                "Checks Directory data only; user account status is owned by the Identity Service."
+)
+def validate_user_affiliation(
+    user_id: str,
+    department_id: Optional[str] = Query(None, description="Optional Department identifier or code"),
+    faculty_id: Optional[str] = Query(None, description="Optional Faculty identifier or code"),
+    db: Session = Depends(get_db)
+):
+    service = AffiliationValidationService(db)
+    validation_data = service.validate_user_affiliation(
+        user_id=user_id,
+        department_id=department_id,
+        faculty_id=faculty_id
+    )
+    return UserAffiliationValidationResponse(success=True, data=validation_data)
