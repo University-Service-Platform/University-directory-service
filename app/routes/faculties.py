@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, status, Query
 from sqlalchemy.orm import Session
+from app.auth import get_current_user, require_admin
 from app.database import get_db
 from app.services.faculty_management_service import FacultyManagementService
 from app.schemas.faculty import (
@@ -9,10 +10,11 @@ from app.schemas.faculty import (
     FacultyListResponse
 )
 
-router = APIRouter(tags=["Faculties"])
+router = APIRouter(tags=["Faculties"], dependencies=[Depends(get_current_user)])
 
 @router.post(
     "/faculties",
+    dependencies=[Depends(require_admin)],
     response_model=FacultySingleResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create Faculty",
@@ -59,6 +61,7 @@ def get_faculty(
 
 @router.put(
     "/faculties/{faculty_id}",
+    dependencies=[Depends(require_admin)],
     response_model=FacultySingleResponse,
     status_code=status.HTTP_200_OK,
     summary="Update Faculty",
@@ -75,6 +78,7 @@ def update_faculty(
 
 @router.delete(
     "/faculties/{faculty_id}",
+    dependencies=[Depends(require_admin)],
     status_code=status.HTTP_200_OK,
     summary="Delete Faculty",
     description="Permanently delete a faculty record."

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, status, Query
 from sqlalchemy.orm import Session
 from typing import Optional
+from app.auth import get_current_user, require_admin
 from app.database import get_db
 from app.services.affiliation_management_service import AffiliationManagementService
 from app.schemas.affiliation import (
@@ -10,10 +11,11 @@ from app.schemas.affiliation import (
     AffiliationListResponse
 )
 
-router = APIRouter(tags=["Affiliations"])
+router = APIRouter(tags=["Affiliations"], dependencies=[Depends(get_current_user)])
 
 @router.post(
     "/affiliations",
+    dependencies=[Depends(require_admin)],
     response_model=AffiliationSingleResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create User Affiliation",
@@ -84,6 +86,7 @@ def get_affiliation(
 
 @router.put(
     "/affiliations/{affiliation_id}",
+    dependencies=[Depends(require_admin)],
     response_model=AffiliationSingleResponse,
     status_code=status.HTTP_200_OK,
     summary="Update Affiliation",
@@ -103,6 +106,7 @@ def update_affiliation(
 
 @router.delete(
     "/affiliations/{affiliation_id}",
+    dependencies=[Depends(require_admin)],
     status_code=status.HTTP_200_OK,
     summary="Delete Affiliation",
     description="Permanently delete a user organizational affiliation record."

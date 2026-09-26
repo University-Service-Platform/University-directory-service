@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 from typing import Optional
+from app.auth import get_current_user
 from app.database import get_db
 from app.services.faculty_validation_service import FacultyValidationService
 from app.services.department_validation_service import DepartmentValidationService
@@ -11,7 +12,7 @@ from app.schemas.department_validation import DepartmentValidationResponse
 from app.schemas.service_unit_validation import ServiceUnitValidationResponse
 from app.schemas.responsibility_validation import UserResponsibilityValidationResponse
 
-router = APIRouter(tags=["Directory Validation"])
+router = APIRouter(tags=["Directory Validation"], dependencies=[Depends(get_current_user)])
 
 @router.get(
     "/validation/faculties/{faculty_id}",

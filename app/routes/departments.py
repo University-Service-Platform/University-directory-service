@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, status, Query
 from sqlalchemy.orm import Session
 from typing import Optional
+from app.auth import get_current_user, require_admin
 from app.database import get_db
 from app.services.department_management_service import DepartmentManagementService
 from app.schemas.department import (
@@ -10,10 +11,11 @@ from app.schemas.department import (
     DepartmentListResponse
 )
 
-router = APIRouter(tags=["Departments"])
+router = APIRouter(tags=["Departments"], dependencies=[Depends(get_current_user)])
 
 @router.post(
     "/departments",
+    dependencies=[Depends(require_admin)],
     response_model=DepartmentSingleResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create Department",
@@ -61,6 +63,7 @@ def get_department(
 
 @router.put(
     "/departments/{department_id}",
+    dependencies=[Depends(require_admin)],
     response_model=DepartmentSingleResponse,
     status_code=status.HTTP_200_OK,
     summary="Update Department",
@@ -77,6 +80,7 @@ def update_department(
 
 @router.patch(
     "/departments/{department_id}",
+    dependencies=[Depends(require_admin)],
     response_model=DepartmentSingleResponse,
     status_code=status.HTTP_200_OK,
     summary="Patch Department",
@@ -93,6 +97,7 @@ def patch_department(
 
 @router.delete(
     "/departments/{department_id}",
+    dependencies=[Depends(require_admin)],
     status_code=status.HTTP_200_OK,
     summary="Delete Department",
     description="Permanently delete a department record."
