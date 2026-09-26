@@ -6,16 +6,24 @@ from typing import List, Optional
 from app.core.errors import AppError
 from app.core.time import utc_now
 from app.core.validators import ensure_identifier
+from app.integrations.identity_client import IdentityClient
 from app.models.user_affiliation import UserAffiliation
 from app.repositories.affiliation_repository import AffiliationRepository
 from app.schemas.affiliation import AffiliationCreate, AffiliationUpdate, AffiliationResponse
 from app.services.lookups import DirectoryLookup, ensure_department_in_faculty
 
 class AffiliationManagementService:
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, identity_client: Optional[IdentityClient] = None):
         self.db = db
         self.repository = AffiliationRepository(db)
         self.lookup = DirectoryLookup(db)
+        self.identity_client = identity_client
+
+    def _ensure_active_user(self, user_id: str) -> None:
+        """Identity Service owns users: confirm the user exists and is ACTIVE before writing."""
+        if self.identity_client is None:
+            raise RuntimeError("AffiliationManagementService needs an IdentityClient for write operations")
+        self.identity_client.get_active_user(user_id)
 
     def _to_response(self, affiliation: UserAffiliation) -> AffiliationResponse:
         return AffiliationResponse(
@@ -53,6 +61,7 @@ class AffiliationManagementService:
 
     def create_affiliation(self, affiliation_in: AffiliationCreate) -> AffiliationResponse:
         user_id = ensure_identifier(affiliation_in.user_id, "User")
+        self._ensure_active_user(user_id)
         dept = self.lookup.department(affiliation_in.department_id)
 
         target_faculty_id = dept.faculty_id
@@ -111,6 +120,7 @@ class AffiliationManagementService:
         affiliation_update: AffiliationUpdate
     ) -> AffiliationResponse:
         aff = self._get_affiliation(affiliation_id)
+        self._ensure_active_user(aff.user_id)
 
         target_dept = aff.department
         if affiliation_update.department_id is not None:

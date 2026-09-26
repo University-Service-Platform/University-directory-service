@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Optional
 from app.auth import get_current_user, require_admin
 from app.database import get_db
+from app.integrations.identity_client import IdentityClient, get_identity_client
 from app.services.affiliation_management_service import AffiliationManagementService
 from app.schemas.affiliation import (
     AffiliationCreate,
@@ -19,13 +20,15 @@ router = APIRouter(tags=["Affiliations"], dependencies=[Depends(get_current_user
     response_model=AffiliationSingleResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create User Affiliation",
-    description="Create an organizational affiliation linking a user to a department and faculty."
+    description="Create an organizational affiliation linking a user to a department and faculty. "
+                "The user must exist and be ACTIVE in the Identity Service."
 )
 def create_affiliation(
     affiliation_in: AffiliationCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    identity_client: IdentityClient = Depends(get_identity_client)
 ):
-    service = AffiliationManagementService(db)
+    service = AffiliationManagementService(db, identity_client)
     affiliation_data = service.create_affiliation(affiliation_in)
     return AffiliationSingleResponse(success=True, data=affiliation_data)
 
@@ -90,14 +93,16 @@ def get_affiliation(
     response_model=AffiliationSingleResponse,
     status_code=status.HTTP_200_OK,
     summary="Update Affiliation",
-    description="Update or transfer a user affiliation to another department/faculty."
+    description="Update or transfer a user affiliation to another department/faculty. "
+                "The affiliated user must still be ACTIVE in the Identity Service."
 )
 def update_affiliation(
     affiliation_id: str,
     affiliation_update: AffiliationUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    identity_client: IdentityClient = Depends(get_identity_client)
 ):
-    service = AffiliationManagementService(db)
+    service = AffiliationManagementService(db, identity_client)
     updated_data = service.update_affiliation(
         affiliation_id=affiliation_id,
         affiliation_update=affiliation_update

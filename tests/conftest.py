@@ -9,8 +9,10 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from app.auth import get_token_verifier
 from app.database import Base, get_db
+from app.integrations.identity_client import get_identity_client
 from app.main import app
 from tests.auth_support import ADMIN_TOKEN, bearer, make_test_verifier
+from tests.fakes import FakeIdentityClient
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test_directory.db"
 
@@ -28,7 +30,12 @@ def db_session():
     Base.metadata.drop_all(bind=engine)
 
 @pytest.fixture(scope="function")
-def anon_client(db_session):
+def identity_client():
+    """Fake Identity Service; every user is ACTIVE unless a test configures otherwise."""
+    return FakeIdentityClient()
+
+@pytest.fixture(scope="function")
+def anon_client(db_session, identity_client):
     """Client with test overrides but no Authorization header."""
     def _get_test_db():
         try:
@@ -39,6 +46,7 @@ def anon_client(db_session):
     test_verifier = make_test_verifier()
     app.dependency_overrides[get_db] = _get_test_db
     app.dependency_overrides[get_token_verifier] = lambda: test_verifier
+    app.dependency_overrides[get_identity_client] = lambda: identity_client
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
