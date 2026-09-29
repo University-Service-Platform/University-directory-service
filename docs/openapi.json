@@ -1,0 +1,3505 @@
+{
+  "components": {
+    "schemas": {
+      "AffiliationCreate": {
+        "properties": {
+          "department_id": {
+            "description": "Department Identifier or Code",
+            "maxLength": 50,
+            "minLength": 2,
+            "title": "Department Id",
+            "type": "string"
+          },
+          "faculty_id": {
+            "anyOf": [
+              {
+                "maxLength": 50,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional Faculty Identifier or Code",
+            "title": "Faculty Id"
+          },
+          "user_id": {
+            "description": "User Identifier",
+            "maxLength": 50,
+            "minLength": 2,
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "department_id"
+        ],
+        "title": "AffiliationCreate",
+        "type": "object"
+      },
+      "AffiliationListResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/AffiliationResponse"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "AffiliationListResponse",
+        "type": "object"
+      },
+      "AffiliationMatch": {
+        "properties": {
+          "affiliation_id": {
+            "title": "Affiliation Id",
+            "type": "string"
+          },
+          "department": {
+            "$ref": "#/components/schemas/OrganizationalUnitRef"
+          },
+          "faculty": {
+            "$ref": "#/components/schemas/OrganizationalUnitRef"
+          }
+        },
+        "required": [
+          "affiliation_id",
+          "department",
+          "faculty"
+        ],
+        "title": "AffiliationMatch",
+        "type": "object"
+      },
+      "AffiliationResponse": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "department_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department Code"
+          },
+          "department_id": {
+            "title": "Department Id",
+            "type": "string"
+          },
+          "department_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department Name"
+          },
+          "faculty_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Faculty Code"
+          },
+          "faculty_id": {
+            "title": "Faculty Id",
+            "type": "string"
+          },
+          "faculty_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Faculty Name"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "department_id",
+          "faculty_id",
+          "created_at"
+        ],
+        "title": "AffiliationResponse",
+        "type": "object"
+      },
+      "AffiliationSingleResponse": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AffiliationResponse"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "AffiliationSingleResponse",
+        "type": "object"
+      },
+      "AffiliationUpdate": {
+        "properties": {
+          "department_id": {
+            "anyOf": [
+              {
+                "maxLength": 50,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Updated Department Identifier or Code",
+            "title": "Department Id"
+          },
+          "faculty_id": {
+            "anyOf": [
+              {
+                "maxLength": 50,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional Updated Faculty Identifier or Code",
+            "title": "Faculty Id"
+          }
+        },
+        "title": "AffiliationUpdate",
+        "type": "object"
+      },
+      "DepartmentCreate": {
+        "properties": {
+          "code": {
+            "description": "Unique Department Code, e.g. DEPT-CS",
+            "maxLength": 20,
+            "minLength": 2,
+            "title": "Code",
+            "type": "string"
+          },
+          "faculty_id": {
+            "description": "Parent Faculty Identifier",
+            "maxLength": 50,
+            "minLength": 2,
+            "title": "Faculty Id",
+            "type": "string"
+          },
+          "name": {
+            "description": "Department Name",
+            "maxLength": 100,
+            "minLength": 2,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "faculty_id"
+        ],
+        "title": "DepartmentCreate",
+        "type": "object"
+      },
+      "DepartmentListResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/DepartmentResponse"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "DepartmentListResponse",
+        "type": "object"
+      },
+      "DepartmentResponse": {
+        "properties": {
+          "code": {
+            "description": "Unique Department Code, e.g. DEPT-CS",
+            "maxLength": 20,
+            "minLength": 2,
+            "title": "Code",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "faculty_id": {
+            "description": "Parent Faculty Identifier",
+            "maxLength": 50,
+            "minLength": 2,
+            "title": "Faculty Id",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "description": "Department Name",
+            "maxLength": 100,
+            "minLength": 2,
+            "title": "Name",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "faculty_id",
+          "id",
+          "created_at"
+        ],
+        "title": "DepartmentResponse",
+        "type": "object"
+      },
+      "DepartmentSingleResponse": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/DepartmentResponse"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "DepartmentSingleResponse",
+        "type": "object"
+      },
+      "DepartmentUpdate": {
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "maxLength": 20,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Updated Department Code",
+            "title": "Code"
+          },
+          "faculty_id": {
+            "anyOf": [
+              {
+                "maxLength": 50,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Updated Faculty Identifier",
+            "title": "Faculty Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Updated Department Name",
+            "title": "Name"
+          }
+        },
+        "title": "DepartmentUpdate",
+        "type": "object"
+      },
+      "DepartmentValidationData": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "department_id": {
+            "title": "Department Id",
+            "type": "string"
+          },
+          "faculty_id": {
+            "title": "Faculty Id",
+            "type": "string"
+          },
+          "faculty_name": {
+            "title": "Faculty Name",
+            "type": "string"
+          },
+          "is_valid": {
+            "default": true,
+            "title": "Is Valid",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "department_id",
+          "code",
+          "name",
+          "faculty_id",
+          "faculty_name"
+        ],
+        "title": "DepartmentValidationData",
+        "type": "object"
+      },
+      "DepartmentValidationResponse": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/DepartmentValidationData"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "DepartmentValidationResponse",
+        "type": "object"
+      },
+      "FacultyCreate": {
+        "properties": {
+          "code": {
+            "description": "Unique Faculty Code, e.g. FSC",
+            "maxLength": 20,
+            "minLength": 2,
+            "title": "Code",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional Description",
+            "title": "Description"
+          },
+          "name": {
+            "description": "Faculty Name",
+            "maxLength": 150,
+            "minLength": 2,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ],
+        "title": "FacultyCreate",
+        "type": "object"
+      },
+      "FacultyListResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/FacultyResponse"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "FacultyListResponse",
+        "type": "object"
+      },
+      "FacultyResponse": {
+        "properties": {
+          "code": {
+            "description": "Unique Faculty Code, e.g. FSC",
+            "maxLength": 20,
+            "minLength": 2,
+            "title": "Code",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional Description",
+            "title": "Description"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "description": "Faculty Name",
+            "maxLength": 150,
+            "minLength": 2,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "id",
+          "created_at"
+        ],
+        "title": "FacultyResponse",
+        "type": "object"
+      },
+      "FacultySingleResponse": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/FacultyResponse"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "FacultySingleResponse",
+        "type": "object"
+      },
+      "FacultyUpdate": {
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "maxLength": 20,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Updated Faculty Code",
+            "title": "Code"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Updated Description",
+            "title": "Description"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 150,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Updated Faculty Name",
+            "title": "Name"
+          }
+        },
+        "title": "FacultyUpdate",
+        "type": "object"
+      },
+      "FacultyValidationData": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "faculty_id": {
+            "title": "Faculty Id",
+            "type": "string"
+          },
+          "is_valid": {
+            "default": true,
+            "title": "Is Valid",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "faculty_id",
+          "code",
+          "name"
+        ],
+        "title": "FacultyValidationData",
+        "type": "object"
+      },
+      "FacultyValidationResponse": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/FacultyValidationData"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "FacultyValidationResponse",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "OrganizationalUnitRef": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name"
+        ],
+        "title": "OrganizationalUnitRef",
+        "type": "object"
+      },
+      "ResponsibilityCreate": {
+        "properties": {
+          "department_id": {
+            "anyOf": [
+              {
+                "maxLength": 50,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Department identifier or code",
+            "title": "Department Id"
+          },
+          "faculty_id": {
+            "anyOf": [
+              {
+                "maxLength": 50,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Faculty identifier or code",
+            "title": "Faculty Id"
+          },
+          "role_title": {
+            "description": "Responsibility title, e.g. Lab Coordinator",
+            "maxLength": 100,
+            "minLength": 2,
+            "title": "Role Title",
+            "type": "string"
+          },
+          "service_unit_id": {
+            "anyOf": [
+              {
+                "maxLength": 50,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Service Unit identifier or code",
+            "title": "Service Unit Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ResponsibilityStatus",
+            "default": "ACTIVE",
+            "description": "ACTIVE or INACTIVE"
+          },
+          "user_id": {
+            "description": "Identity Service user identifier",
+            "maxLength": 36,
+            "minLength": 2,
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "role_title"
+        ],
+        "title": "ResponsibilityCreate",
+        "type": "object"
+      },
+      "ResponsibilityListResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ResponsibilityResponse"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "ResponsibilityListResponse",
+        "type": "object"
+      },
+      "ResponsibilityRecordData": {
+        "properties": {
+          "department_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department Id"
+          },
+          "department_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department Name"
+          },
+          "faculty_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Faculty Id"
+          },
+          "faculty_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Faculty Name"
+          },
+          "responsibility_id": {
+            "title": "Responsibility Id",
+            "type": "string"
+          },
+          "role_title": {
+            "title": "Role Title",
+            "type": "string"
+          },
+          "service_unit_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Unit Id"
+          },
+          "service_unit_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Unit Name"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ResponsibilityStatus"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "responsibility_id",
+          "user_id",
+          "role_title",
+          "status"
+        ],
+        "title": "ResponsibilityRecordData",
+        "type": "object"
+      },
+      "ResponsibilityResponse": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "department_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department Code"
+          },
+          "department_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department Id"
+          },
+          "department_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department Name"
+          },
+          "faculty_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Faculty Code"
+          },
+          "faculty_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Faculty Id"
+          },
+          "faculty_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Faculty Name"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "role_title": {
+            "title": "Role Title",
+            "type": "string"
+          },
+          "service_unit_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Unit Code"
+          },
+          "service_unit_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Unit Id"
+          },
+          "service_unit_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service Unit Name"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ResponsibilityStatus"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "role_title",
+          "status",
+          "created_at"
+        ],
+        "title": "ResponsibilityResponse",
+        "type": "object"
+      },
+      "ResponsibilitySingleResponse": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ResponsibilityResponse"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "ResponsibilitySingleResponse",
+        "type": "object"
+      },
+      "ResponsibilityStatus": {
+        "enum": [
+          "ACTIVE",
+          "INACTIVE"
+        ],
+        "title": "ResponsibilityStatus",
+        "type": "string"
+      },
+      "ResponsibilityUpdate": {
+        "properties": {
+          "department_id": {
+            "anyOf": [
+              {
+                "maxLength": 50,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "New Department identifier or code",
+            "title": "Department Id"
+          },
+          "faculty_id": {
+            "anyOf": [
+              {
+                "maxLength": 50,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "New Faculty identifier or code",
+            "title": "Faculty Id"
+          },
+          "role_title": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Updated responsibility title",
+            "title": "Role Title"
+          },
+          "service_unit_id": {
+            "anyOf": [
+              {
+                "maxLength": 50,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "New Service Unit identifier or code",
+            "title": "Service Unit Id"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResponsibilityStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "ACTIVE or INACTIVE"
+          }
+        },
+        "title": "ResponsibilityUpdate",
+        "type": "object"
+      },
+      "ServiceUnitCreate": {
+        "properties": {
+          "code": {
+            "description": "Unique Service Unit Code, e.g. LIB",
+            "maxLength": 20,
+            "minLength": 2,
+            "title": "Code",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional Description",
+            "title": "Description"
+          },
+          "name": {
+            "description": "Service Unit Name",
+            "maxLength": 150,
+            "minLength": 2,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ],
+        "title": "ServiceUnitCreate",
+        "type": "object"
+      },
+      "ServiceUnitListResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceUnitResponse"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "ServiceUnitListResponse",
+        "type": "object"
+      },
+      "ServiceUnitResponse": {
+        "properties": {
+          "code": {
+            "description": "Unique Service Unit Code, e.g. LIB",
+            "maxLength": 20,
+            "minLength": 2,
+            "title": "Code",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional Description",
+            "title": "Description"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "description": "Service Unit Name",
+            "maxLength": 150,
+            "minLength": 2,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "id",
+          "created_at"
+        ],
+        "title": "ServiceUnitResponse",
+        "type": "object"
+      },
+      "ServiceUnitSingleResponse": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ServiceUnitResponse"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "ServiceUnitSingleResponse",
+        "type": "object"
+      },
+      "ServiceUnitUpdate": {
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "maxLength": 20,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Updated Service Unit Code",
+            "title": "Code"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Updated Description",
+            "title": "Description"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 150,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Updated Service Unit Name",
+            "title": "Name"
+          }
+        },
+        "title": "ServiceUnitUpdate",
+        "type": "object"
+      },
+      "ServiceUnitValidationData": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "is_valid": {
+            "default": true,
+            "title": "Is Valid",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "unit_id": {
+            "title": "Unit Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "unit_id",
+          "code",
+          "name"
+        ],
+        "title": "ServiceUnitValidationData",
+        "type": "object"
+      },
+      "ServiceUnitValidationResponse": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ServiceUnitValidationData"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "ServiceUnitValidationResponse",
+        "type": "object"
+      },
+      "UserAffiliationValidationData": {
+        "properties": {
+          "affiliations": {
+            "items": {
+              "$ref": "#/components/schemas/AffiliationMatch"
+            },
+            "title": "Affiliations",
+            "type": "array"
+          },
+          "is_valid": {
+            "title": "Is Valid",
+            "type": "boolean"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "is_valid",
+          "affiliations"
+        ],
+        "title": "UserAffiliationValidationData",
+        "type": "object"
+      },
+      "UserAffiliationValidationResponse": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/UserAffiliationValidationData"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "UserAffiliationValidationResponse",
+        "type": "object"
+      },
+      "UserResponsibilityValidationData": {
+        "properties": {
+          "is_valid": {
+            "title": "Is Valid",
+            "type": "boolean"
+          },
+          "responsibilities": {
+            "items": {
+              "$ref": "#/components/schemas/ResponsibilityRecordData"
+            },
+            "title": "Responsibilities",
+            "type": "array"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "is_valid",
+          "responsibilities"
+        ],
+        "title": "UserResponsibilityValidationData",
+        "type": "object"
+      },
+      "UserResponsibilityValidationResponse": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/UserResponsibilityValidationData"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "UserResponsibilityValidationResponse",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "description": "JWT issued by the Identity Service",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "Directory microservice handling Faculties, Departments, Service Units, User Affiliations and Service Responsibilities. Versioned API under /api/v1.",
+    "title": "University Directory Service",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/affiliations": {
+      "get": {
+        "description": "Retrieve a list of organizational affiliations with optional filters and pagination.",
+        "operationId": "list_affiliations_api_v1_affiliations_get",
+        "parameters": [
+          {
+            "description": "Number of items to skip",
+            "in": "query",
+            "name": "skip",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "description": "Number of items to skip",
+              "minimum": 0,
+              "title": "Skip",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Max items to return",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "description": "Max items to return",
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Filter by department identifier",
+            "in": "query",
+            "name": "department_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by department identifier",
+              "title": "Department Id"
+            }
+          },
+          {
+            "description": "Filter by faculty identifier",
+            "in": "query",
+            "name": "faculty_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by faculty identifier",
+              "title": "Faculty Id"
+            }
+          },
+          {
+            "description": "Filter by user identifier",
+            "in": "query",
+            "name": "user_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by user identifier",
+              "title": "User Id"
+            }
+          },
+          {
+            "description": "Case-insensitive search in user id and department/faculty code and name",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Case-insensitive search in user id and department/faculty code and name",
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AffiliationListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Affiliations",
+        "tags": [
+          "Affiliations"
+        ]
+      },
+      "post": {
+        "description": "Create an organizational affiliation linking a user to a department and faculty. The user must exist and be ACTIVE in the Identity Service.",
+        "operationId": "create_affiliation_api_v1_affiliations_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AffiliationCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AffiliationSingleResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create User Affiliation",
+        "tags": [
+          "Affiliations"
+        ]
+      }
+    },
+    "/api/v1/affiliations/users/{user_id}": {
+      "get": {
+        "description": "Retrieve the current organizational affiliation for a specific user.",
+        "operationId": "get_user_affiliation_api_v1_affiliations_users__user_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AffiliationSingleResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get User Organizational Affiliation",
+        "tags": [
+          "Affiliations"
+        ]
+      }
+    },
+    "/api/v1/affiliations/{affiliation_id}": {
+      "delete": {
+        "description": "Permanently delete a user organizational affiliation record.",
+        "operationId": "delete_affiliation_api_v1_affiliations__affiliation_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "affiliation_id",
+            "required": true,
+            "schema": {
+              "title": "Affiliation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Affiliation",
+        "tags": [
+          "Affiliations"
+        ]
+      },
+      "get": {
+        "description": "Retrieve details for a specific affiliation by its unique identifier.",
+        "operationId": "get_affiliation_api_v1_affiliations__affiliation_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "affiliation_id",
+            "required": true,
+            "schema": {
+              "title": "Affiliation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AffiliationSingleResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Affiliation by ID",
+        "tags": [
+          "Affiliations"
+        ]
+      },
+      "put": {
+        "description": "Update or transfer a user affiliation to another department/faculty. The affiliated user must still be ACTIVE in the Identity Service.",
+        "operationId": "update_affiliation_api_v1_affiliations__affiliation_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "affiliation_id",
+            "required": true,
+            "schema": {
+              "title": "Affiliation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AffiliationUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AffiliationSingleResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Affiliation",
+        "tags": [
+          "Affiliations"
+        ]
+      }
+    },
+    "/api/v1/departments": {
+      "get": {
+        "description": "Retrieve a list of all academic departments with optional pagination and faculty filtering.",
+        "operationId": "list_departments_api_v1_departments_get",
+        "parameters": [
+          {
+            "description": "Number of items to skip",
+            "in": "query",
+            "name": "skip",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "description": "Number of items to skip",
+              "minimum": 0,
+              "title": "Skip",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Max items to return",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "description": "Max items to return",
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Optional filter by parent faculty ID",
+            "in": "query",
+            "name": "faculty_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional filter by parent faculty ID",
+              "title": "Faculty Id"
+            }
+          },
+          {
+            "description": "Case-insensitive search in code and name",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Case-insensitive search in code and name",
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepartmentListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Departments",
+        "tags": [
+          "Departments"
+        ]
+      },
+      "post": {
+        "description": "Create a new academic department record associated with a valid faculty.",
+        "operationId": "create_department_api_v1_departments_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DepartmentCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepartmentSingleResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Department",
+        "tags": [
+          "Departments"
+        ]
+      }
+    },
+    "/api/v1/departments/{department_id}": {
+      "delete": {
+        "description": "Permanently delete a department record.",
+        "operationId": "delete_department_api_v1_departments__department_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "department_id",
+            "required": true,
+            "schema": {
+              "title": "Department Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Department",
+        "tags": [
+          "Departments"
+        ]
+      },
+      "get": {
+        "description": "Retrieve details for a specific department by its identifier or department code.",
+        "operationId": "get_department_api_v1_departments__department_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "department_id",
+            "required": true,
+            "schema": {
+              "title": "Department Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepartmentSingleResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Department by ID or Code",
+        "tags": [
+          "Departments"
+        ]
+      },
+      "patch": {
+        "description": "Partially update details of an existing department.",
+        "operationId": "patch_department_api_v1_departments__department_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "department_id",
+            "required": true,
+            "schema": {
+              "title": "Department Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DepartmentUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepartmentSingleResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Patch Department",
+        "tags": [
+          "Departments"
+        ]
+      },
+      "put": {
+        "description": "Update details (name, code, faculty_id) of an existing department.",
+        "operationId": "update_department_api_v1_departments__department_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "department_id",
+            "required": true,
+            "schema": {
+              "title": "Department Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DepartmentUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepartmentSingleResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Department",
+        "tags": [
+          "Departments"
+        ]
+      }
+    },
+    "/api/v1/faculties": {
+      "get": {
+        "description": "Retrieve academic faculties, optionally narrowed by a free-text search.",
+        "operationId": "list_faculties_api_v1_faculties_get",
+        "parameters": [
+          {
+            "description": "Number of items to skip",
+            "in": "query",
+            "name": "skip",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "description": "Number of items to skip",
+              "minimum": 0,
+              "title": "Skip",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Max items to return",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "description": "Max items to return",
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Case-insensitive search in code, name and description",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Case-insensitive search in code, name and description",
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FacultyListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Faculties",
+        "tags": [
+          "Faculties"
+        ]
+      },
+      "post": {
+        "description": "Create a new academic faculty record.",
+        "operationId": "create_faculty_api_v1_faculties_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FacultyCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FacultySingleResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Faculty",
+        "tags": [
+          "Faculties"
+        ]
+      }
+    },
+    "/api/v1/faculties/{faculty_id}": {
+      "delete": {
+        "description": "Permanently delete a faculty record.",
+        "operationId": "delete_faculty_api_v1_faculties__faculty_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "faculty_id",
+            "required": true,
+            "schema": {
+              "title": "Faculty Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Faculty",
+        "tags": [
+          "Faculties"
+        ]
+      },
+      "get": {
+        "description": "Retrieve details for a specific faculty by its identifier or faculty code.",
+        "operationId": "get_faculty_api_v1_faculties__faculty_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "faculty_id",
+            "required": true,
+            "schema": {
+              "title": "Faculty Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FacultySingleResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Faculty by ID or Code",
+        "tags": [
+          "Faculties"
+        ]
+      },
+      "put": {
+        "description": "Update permitted details (name, description, code) of an existing faculty.",
+        "operationId": "update_faculty_api_v1_faculties__faculty_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "faculty_id",
+            "required": true,
+            "schema": {
+              "title": "Faculty Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FacultyUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FacultySingleResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Faculty",
+        "tags": [
+          "Faculties"
+        ]
+      }
+    },
+    "/api/v1/responsibilities": {
+      "get": {
+        "description": "List service responsibilities with optional filters and pagination.",
+        "operationId": "list_responsibilities_api_v1_responsibilities_get",
+        "parameters": [
+          {
+            "description": "Number of items to skip",
+            "in": "query",
+            "name": "skip",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "description": "Number of items to skip",
+              "minimum": 0,
+              "title": "Skip",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Max items to return",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "description": "Max items to return",
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Filter by user identifier",
+            "in": "query",
+            "name": "user_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by user identifier",
+              "title": "User Id"
+            }
+          },
+          {
+            "description": "Filter by service unit identifier",
+            "in": "query",
+            "name": "service_unit_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by service unit identifier",
+              "title": "Service Unit Id"
+            }
+          },
+          {
+            "description": "Filter by department identifier",
+            "in": "query",
+            "name": "department_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by department identifier",
+              "title": "Department Id"
+            }
+          },
+          {
+            "description": "Filter by faculty identifier",
+            "in": "query",
+            "name": "faculty_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by faculty identifier",
+              "title": "Faculty Id"
+            }
+          },
+          {
+            "description": "Filter by status",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ResponsibilityStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by status",
+              "title": "Status"
+            }
+          },
+          {
+            "description": "Case-insensitive search in user id, role title and unit/department/faculty code and name",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Case-insensitive search in user id, role title and unit/department/faculty code and name",
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponsibilityListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Service Responsibilities",
+        "tags": [
+          "Service Responsibilities"
+        ]
+      },
+      "post": {
+        "description": "Assign a responsibility to a user for a service unit, department and/or faculty. Referenced units must exist; an ACTIVE responsibility requires the user to be ACTIVE in the Identity Service and must not duplicate another ACTIVE one for the same scope.",
+        "operationId": "create_responsibility_api_v1_responsibilities_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponsibilityCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponsibilitySingleResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Service Responsibility",
+        "tags": [
+          "Service Responsibilities"
+        ]
+      }
+    },
+    "/api/v1/responsibilities/{responsibility_id}": {
+      "delete": {
+        "description": "Permanently delete a service responsibility record.",
+        "operationId": "delete_responsibility_api_v1_responsibilities__responsibility_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "responsibility_id",
+            "required": true,
+            "schema": {
+              "title": "Responsibility Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Service Responsibility",
+        "tags": [
+          "Service Responsibilities"
+        ]
+      },
+      "get": {
+        "description": "Retrieve a single service responsibility.",
+        "operationId": "get_responsibility_api_v1_responsibilities__responsibility_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "responsibility_id",
+            "required": true,
+            "schema": {
+              "title": "Responsibility Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponsibilitySingleResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Service Responsibility",
+        "tags": [
+          "Service Responsibilities"
+        ]
+      },
+      "put": {
+        "description": "Update the title, status or organizational scope of a responsibility. Deactivating does not require the user to be active in the Identity Service.",
+        "operationId": "update_responsibility_api_v1_responsibilities__responsibility_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "responsibility_id",
+            "required": true,
+            "schema": {
+              "title": "Responsibility Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponsibilityUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponsibilitySingleResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Service Responsibility",
+        "tags": [
+          "Service Responsibilities"
+        ]
+      }
+    },
+    "/api/v1/service-units": {
+      "get": {
+        "description": "Retrieve a list of all non-academic central service units.",
+        "operationId": "list_service_units_api_v1_service_units_get",
+        "parameters": [
+          {
+            "description": "Number of items to skip",
+            "in": "query",
+            "name": "skip",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "description": "Number of items to skip",
+              "minimum": 0,
+              "title": "Skip",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Max items to return",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "description": "Max items to return",
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Case-insensitive search in code, name and description",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Case-insensitive search in code, name and description",
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnitListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Service Units",
+        "tags": [
+          "Service Units"
+        ]
+      },
+      "post": {
+        "description": "Create a new non-academic central service unit record.",
+        "operationId": "create_service_unit_api_v1_service_units_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceUnitCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnitSingleResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Service Unit",
+        "tags": [
+          "Service Units"
+        ]
+      }
+    },
+    "/api/v1/service-units/{service_unit_id}": {
+      "delete": {
+        "description": "Permanently delete a service unit record.",
+        "operationId": "delete_service_unit_api_v1_service_units__service_unit_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "service_unit_id",
+            "required": true,
+            "schema": {
+              "title": "Service Unit Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Service Unit",
+        "tags": [
+          "Service Units"
+        ]
+      },
+      "get": {
+        "description": "Retrieve details for a specific service unit by its identifier or unit code.",
+        "operationId": "get_service_unit_api_v1_service_units__service_unit_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "service_unit_id",
+            "required": true,
+            "schema": {
+              "title": "Service Unit Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnitSingleResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Service Unit by ID or Code",
+        "tags": [
+          "Service Units"
+        ]
+      },
+      "put": {
+        "description": "Update permitted details (name, description, code) of an existing service unit.",
+        "operationId": "update_service_unit_api_v1_service_units__service_unit_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "service_unit_id",
+            "required": true,
+            "schema": {
+              "title": "Service Unit Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceUnitUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnitSingleResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Service Unit",
+        "tags": [
+          "Service Units"
+        ]
+      }
+    },
+    "/api/v1/validation/departments/{department_id}": {
+      "get": {
+        "description": "Validate Department existence, identifier/code, and parent Faculty relationship for dependent services.",
+        "operationId": "validate_department_api_v1_validation_departments__department_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "department_id",
+            "required": true,
+            "schema": {
+              "title": "Department Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepartmentValidationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Validate Department",
+        "tags": [
+          "Directory Validation"
+        ]
+      }
+    },
+    "/api/v1/validation/faculties/{faculty_id}": {
+      "get": {
+        "description": "Validate Faculty existence, code, and identifier reference for dependent services.",
+        "operationId": "validate_faculty_api_v1_validation_faculties__faculty_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "faculty_id",
+            "required": true,
+            "schema": {
+              "title": "Faculty Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FacultyValidationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Validate Faculty",
+        "tags": [
+          "Directory Validation"
+        ]
+      }
+    },
+    "/api/v1/validation/service-units/{unit_id}": {
+      "get": {
+        "description": "Validate Service Unit existence, code, and identifier reference for dependent services.",
+        "operationId": "validate_service_unit_api_v1_validation_service_units__unit_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unit_id",
+            "required": true,
+            "schema": {
+              "title": "Unit Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnitValidationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Validate Service Unit",
+        "tags": [
+          "Directory Validation"
+        ]
+      }
+    },
+    "/api/v1/validation/users/{user_id}/affiliation": {
+      "get": {
+        "description": "Validate that a user is affiliated with the given department and/or faculty (identifier or code). Checks Directory data only; user account status is owned by the Identity Service.",
+        "operationId": "validate_user_affiliation_api_v1_validation_users__user_id__affiliation_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional Department identifier or code",
+            "in": "query",
+            "name": "department_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional Department identifier or code",
+              "title": "Department Id"
+            }
+          },
+          {
+            "description": "Optional Faculty identifier or code",
+            "in": "query",
+            "name": "faculty_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional Faculty identifier or code",
+              "title": "Faculty Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserAffiliationValidationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Validate User Affiliation",
+        "tags": [
+          "Directory Validation"
+        ]
+      }
+    },
+    "/api/v1/validation/users/{user_id}/responsibilities": {
+      "get": {
+        "description": "Validate actual service responsibility relationships between a user and organizational units (Service Units, Departments, Faculties).",
+        "operationId": "validate_user_responsibilities_api_v1_validation_users__user_id__responsibilities_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional filter by Service Unit ID",
+            "in": "query",
+            "name": "service_unit_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional filter by Service Unit ID",
+              "title": "Service Unit Id"
+            }
+          },
+          {
+            "description": "Optional filter by Department ID",
+            "in": "query",
+            "name": "department_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional filter by Department ID",
+              "title": "Department Id"
+            }
+          },
+          {
+            "description": "Optional filter by Faculty ID",
+            "in": "query",
+            "name": "faculty_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional filter by Faculty ID",
+              "title": "Faculty Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponsibilityValidationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Validate Service Responsibility Mappings",
+        "tags": [
+          "Directory Validation"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health Check",
+        "tags": [
+          "Health"
+        ]
+      }
+    }
+  }
+}
