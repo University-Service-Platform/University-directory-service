@@ -1,34 +1,25 @@
 from sqlalchemy.orm import Session
-from fastapi import HTTPException, status
+from fastapi import status
 import uuid
-import re
 from typing import List, Optional
-from datetime import datetime
 
+from app.core.errors import AppError
+from app.core.time import utc_now
+from app.core.validators import ensure_code
 from app.models.department import Department
+from app.repositories.affiliation_repository import AffiliationRepository
 from app.repositories.department_repository import DepartmentRepository
-from app.repositories.faculty_repository import FacultyRepository
+from app.repositories.responsibility_repository import ServiceResponsibilityRepository
 from app.schemas.department import DepartmentCreate, DepartmentUpdate, DepartmentResponse
+from app.services.lookups import DirectoryLookup, ensure_no_dependencies
 
 class DepartmentManagementService:
     def __init__(self, db: Session):
         self.db = db
         self.repository = DepartmentRepository(db)
-        self.faculty_repository = FacultyRepository(db)
-
-    @staticmethod
-    def validate_code_format(code: str) -> bool:
-        if not code or not isinstance(code, str):
-            return False
-        pattern = r"^[a-zA-Z0-9_-]{2,20}$"
-        return bool(re.match(pattern, code.strip()))
-
-    @staticmethod
-    def validate_identifier_format(department_id: str) -> bool:
-        if not department_id or not isinstance(department_id, str):
-            return False
-        pattern = r"^[a-zA-Z0-9_-]{2,50}$"
-        return bool(re.match(pattern, department_id.strip()))
+        self.lookup = DirectoryLookup(db)
+        self.affiliations = AffiliationRepository(db)
+        self.responsibilities = ServiceResponsibilityRepository(db)
 
     def _to_response(self, department: Department) -> DepartmentResponse:
         return DepartmentResponse(
@@ -40,56 +31,28 @@ class DepartmentManagementService:
             updated_at=department.updated_at
         )
 
+    def _ensure_code_available(self, code: str, current_id: Optional[str] = None) -> None:
+        existing = self.repository.get_by_code(code)
+        if existing and existing.id != current_id:
+            raise AppError(
+                status.HTTP_409_CONFLICT,
+                "DEPARTMENT_CODE_ALREADY_EXISTS",
+                f"Department with code '{code}' already exists."
+            )
+
     def create_department(self, department_in: DepartmentCreate) -> DepartmentResponse:
         normalized_code = department_in.code.strip().upper()
-        if not self.validate_code_format(normalized_code):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail={
-                    "success": False,
-                    "error": {
-                        "code": "INVALID_IDENTIFIER_FORMAT",
-                        "message": f"Department code '{department_in.code}' has an invalid format."
-                    }
-                }
-            )
+        ensure_code(normalized_code, "Department", display=department_in.code)
+        self._ensure_code_available(normalized_code)
 
-        # Check duplicate code
-        if self.repository.get_by_code(normalized_code):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail={
-                    "success": False,
-                    "error": {
-                        "code": "DEPARTMENT_CODE_ALREADY_EXISTS",
-                        "message": f"Department with code '{normalized_code}' already exists."
-                    }
-                }
-            )
-
-        # Validate faculty exists
-        faculty = self.faculty_repository.get_by_id(department_in.faculty_id.strip())
-        if not faculty:
-            faculty = self.faculty_repository.get_by_code(department_in.faculty_id.strip().upper())
-
-        if not faculty:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail={
-                    "success": False,
-                    "error": {
-                        "code": "FACULTY_NOT_FOUND",
-                        "message": f"Faculty with identifier '{department_in.faculty_id}' was not found."
-                    }
-                }
-            )
+        faculty = self.lookup.faculty(department_in.faculty_id)
 
         new_dept = Department(
             id=f"dept-{normalized_code.lower()}-{uuid.uuid4().hex[:6]}",
             code=normalized_code,
             name=department_in.name.strip(),
             faculty_id=faculty.id,
-            created_at=datetime.utcnow()
+            created_at=utc_now()
         )
 
         persisted = self.repository.create(new_dept)
@@ -99,150 +62,42 @@ class DepartmentManagementService:
         self,
         skip: int = 0,
         limit: int = 100,
-        faculty_id: Optional[str] = None
+        faculty_id: Optional[str] = None,
+        q: Optional[str] = None
     ) -> List[DepartmentResponse]:
-        departments = self.repository.list_all(skip=skip, limit=limit, faculty_id=faculty_id)
+        departments = self.repository.list_all(skip=skip, limit=limit, faculty_id=faculty_id, q=q)
         return [self._to_response(d) for d in departments]
 
     def get_department(self, department_id: str) -> DepartmentResponse:
-        if not self.validate_identifier_format(department_id):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail={
-                    "success": False,
-                    "error": {
-                        "code": "INVALID_IDENTIFIER_FORMAT",
-                        "message": f"Department identifier '{department_id}' has an invalid format."
-                    }
-                }
-            )
-
-        dept = self.repository.get_by_id(department_id)
-        if not dept:
-            dept = self.repository.get_by_code(department_id.strip().upper())
-
-        if not dept:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail={
-                    "success": False,
-                    "error": {
-                        "code": "DEPARTMENT_NOT_FOUND",
-                        "message": f"Department with identifier '{department_id}' was not found."
-                    }
-                }
-            )
-
-        return self._to_response(dept)
+        return self._to_response(self.lookup.department(department_id))
 
     def update_department(self, department_id: str, department_update: DepartmentUpdate) -> DepartmentResponse:
-        if not self.validate_identifier_format(department_id):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail={
-                    "success": False,
-                    "error": {
-                        "code": "INVALID_IDENTIFIER_FORMAT",
-                        "message": f"Department identifier '{department_id}' has an invalid format."
-                    }
-                }
-            )
-
-        dept = self.repository.get_by_id(department_id)
-        if not dept:
-            dept = self.repository.get_by_code(department_id.strip().upper())
-
-        if not dept:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail={
-                    "success": False,
-                    "error": {
-                        "code": "DEPARTMENT_NOT_FOUND",
-                        "message": f"Department with identifier '{department_id}' was not found."
-                    }
-                }
-            )
+        dept = self.lookup.department(department_id)
 
         if department_update.code is not None:
             new_code = department_update.code.strip().upper()
-            if not self.validate_code_format(new_code):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail={
-                        "success": False,
-                        "error": {
-                            "code": "INVALID_IDENTIFIER_FORMAT",
-                            "message": f"Department code '{new_code}' has an invalid format."
-                        }
-                    }
-                )
-            existing = self.repository.get_by_code(new_code)
-            if existing and existing.id != dept.id:
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail={
-                        "success": False,
-                        "error": {
-                            "code": "DEPARTMENT_CODE_ALREADY_EXISTS",
-                            "message": f"Department with code '{new_code}' already exists."
-                        }
-                    }
-                )
+            ensure_code(new_code, "Department")
+            self._ensure_code_available(new_code, current_id=dept.id)
             dept.code = new_code
 
         if department_update.name is not None:
             dept.name = department_update.name.strip()
 
         if department_update.faculty_id is not None:
-            faculty = self.faculty_repository.get_by_id(department_update.faculty_id.strip())
-            if not faculty:
-                faculty = self.faculty_repository.get_by_code(department_update.faculty_id.strip().upper())
+            dept.faculty_id = self.lookup.faculty(department_update.faculty_id).id
 
-            if not faculty:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail={
-                        "success": False,
-                        "error": {
-                            "code": "FACULTY_NOT_FOUND",
-                            "message": f"Faculty with identifier '{department_update.faculty_id}' was not found."
-                        }
-                    }
-                )
-            dept.faculty_id = faculty.id
-
-        dept.updated_at = datetime.utcnow()
+        dept.updated_at = utc_now()
         updated = self.repository.update(dept)
         return self._to_response(updated)
 
     def delete_department(self, department_id: str) -> None:
-        if not self.validate_identifier_format(department_id):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail={
-                    "success": False,
-                    "error": {
-                        "code": "INVALID_IDENTIFIER_FORMAT",
-                        "message": f"Department identifier '{department_id}' has an invalid format."
-                    }
-                }
-            )
-
-        dept = self.repository.get_by_id(department_id)
-        if not dept:
-            dept = self.repository.get_by_code(department_id.strip().upper())
-
-        if not dept:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail={
-                    "success": False,
-                    "error": {
-                        "code": "DEPARTMENT_NOT_FOUND",
-                        "message": f"Department with identifier '{department_id}' was not found."
-                    }
-                }
-            )
-
+        dept = self.lookup.department(department_id)
+        ensure_no_dependencies(
+            "DEPARTMENT_HAS_DEPENDENCIES",
+            f"Department '{dept.code}'",
+            {
+                "affiliation(s)": self.affiliations.count_by_department(dept.id),
+                "responsibility(ies)": self.responsibilities.count_referencing(department_id=dept.id),
+            },
+        )
         self.repository.delete(dept)

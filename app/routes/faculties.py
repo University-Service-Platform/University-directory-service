@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, status, Query
+from typing import Optional
 from sqlalchemy.orm import Session
+from app.auth import get_current_user, require_admin
 from app.database import get_db
 from app.services.faculty_management_service import FacultyManagementService
 from app.schemas.faculty import (
@@ -9,10 +11,11 @@ from app.schemas.faculty import (
     FacultyListResponse
 )
 
-router = APIRouter(tags=["Faculties"])
+router = APIRouter(tags=["Faculties"], dependencies=[Depends(get_current_user)])
 
 @router.post(
     "/faculties",
+    dependencies=[Depends(require_admin)],
     response_model=FacultySingleResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create Faculty",
@@ -31,15 +34,16 @@ def create_faculty(
     response_model=FacultyListResponse,
     status_code=status.HTTP_200_OK,
     summary="List Faculties",
-    description="Retrieve a list of all academic faculties."
+    description="Retrieve academic faculties, optionally narrowed by a free-text search."
 )
 def list_faculties(
     skip: int = Query(0, ge=0, description="Number of items to skip"),
     limit: int = Query(100, ge=1, le=500, description="Max items to return"),
+    q: Optional[str] = Query(None, max_length=100, description="Case-insensitive search in code, name and description"),
     db: Session = Depends(get_db)
 ):
     service = FacultyManagementService(db)
-    faculties_data = service.list_faculties(skip=skip, limit=limit)
+    faculties_data = service.list_faculties(skip=skip, limit=limit, q=q)
     return FacultyListResponse(success=True, data=faculties_data)
 
 @router.get(
@@ -59,6 +63,7 @@ def get_faculty(
 
 @router.put(
     "/faculties/{faculty_id}",
+    dependencies=[Depends(require_admin)],
     response_model=FacultySingleResponse,
     status_code=status.HTTP_200_OK,
     summary="Update Faculty",
@@ -75,6 +80,7 @@ def update_faculty(
 
 @router.delete(
     "/faculties/{faculty_id}",
+    dependencies=[Depends(require_admin)],
     status_code=status.HTTP_200_OK,
     summary="Delete Faculty",
     description="Permanently delete a faculty record."

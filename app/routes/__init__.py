@@ -4,6 +4,7 @@ from app.routes.faculties import router as faculties_router
 from app.routes.service_units import router as service_units_router
 from app.routes.departments import router as departments_router
 from app.routes.affiliations import router as affiliations_router
+from app.routes.responsibilities import router as responsibilities_router
 
 __all__ = [
     "validation_router",
@@ -12,6 +13,7 @@ __all__ = [
     "service_units_router",
     "departments_router",
     "affiliations_router",
+    "responsibilities_router",
 ]
 
 

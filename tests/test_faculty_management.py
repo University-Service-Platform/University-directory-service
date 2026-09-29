@@ -23,7 +23,7 @@ def test_create_faculty_success(client, db_session):
         "name": "Faculty of Engineering",
         "description": "Faculty of Engineering and Technology"
     }
-    response = client.post("/faculties", json=payload)
+    response = client.post("/api/v1/faculties", json=payload)
     assert response.status_code == 201
     data = response.json()
     assert data["success"] is True
@@ -44,7 +44,7 @@ def test_create_faculty_duplicate_code_rejected(client, db_session):
         "name": "Another Faculty of Science",
         "description": "Duplicate faculty code attempt"
     }
-    response = client.post("/faculties", json=payload)
+    response = client.post("/api/v1/faculties", json=payload)
     assert response.status_code == 409
     data = response.json()
     assert data["success"] is False
@@ -56,12 +56,12 @@ def test_create_faculty_malformed_code_rejected(client, db_session):
         "name": "Faculty of Invalid Code",
         "description": "Invalid format attempt"
     }
-    response = client.post("/faculties", json=payload)
+    response = client.post("/api/v1/faculties", json=payload)
     assert response.status_code in [400, 422]
 
 def test_list_faculties(client, db_session):
     seed_faculty_data(db_session)
-    response = client.get("/faculties")
+    response = client.get("/api/v1/faculties")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -72,7 +72,7 @@ def test_list_faculties(client, db_session):
 
 def test_get_faculty_by_id_success(client, db_session):
     seed_faculty_data(db_session)
-    response = client.get("/faculties/fac-science-001")
+    response = client.get("/api/v1/faculties/fac-science-001")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -81,7 +81,7 @@ def test_get_faculty_by_id_success(client, db_session):
 
 def test_get_faculty_by_code_success(client, db_session):
     seed_faculty_data(db_session)
-    response = client.get("/faculties/FMD")
+    response = client.get("/api/v1/faculties/FMD")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -90,7 +90,7 @@ def test_get_faculty_by_code_success(client, db_session):
 
 def test_get_faculty_nonexistent_rejected(client, db_session):
     seed_faculty_data(db_session)
-    response = client.get("/faculties/non-existent-faculty")
+    response = client.get("/api/v1/faculties/non-existent-faculty")
     assert response.status_code == 404
     data = response.json()
     assert data["success"] is False
@@ -102,7 +102,7 @@ def test_update_faculty_success(client, db_session):
         "name": "Faculty of Pure and Applied Science",
         "description": "Updated science faculty description"
     }
-    response = client.put("/faculties/fac-science-001", json=update_payload)
+    response = client.put("/api/v1/faculties/fac-science-001", json=update_payload)
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -120,7 +120,7 @@ def test_update_faculty_duplicate_code_rejected(client, db_session):
     update_payload = {
         "code": "FMD"
     }
-    response = client.put("/faculties/fac-science-001", json=update_payload)
+    response = client.put("/api/v1/faculties/fac-science-001", json=update_payload)
     assert response.status_code == 409
     data = response.json()
     assert data["success"] is False
@@ -128,12 +128,12 @@ def test_update_faculty_duplicate_code_rejected(client, db_session):
 
 def test_delete_faculty_success(client, db_session):
     seed_faculty_data(db_session)
-    response = client.delete("/faculties/fac-science-001")
+    response = client.delete("/api/v1/faculties/fac-science-001")
     assert response.status_code == 200
     assert response.json()["success"] is True
 
     # Subsequent GET returns 404
-    get_res = client.get("/faculties/fac-science-001")
+    get_res = client.get("/api/v1/faculties/fac-science-001")
     assert get_res.status_code == 404
 
     # Verify directly in DB
@@ -142,7 +142,7 @@ def test_delete_faculty_success(client, db_session):
 
 def test_delete_nonexistent_faculty_rejected(client, db_session):
     seed_faculty_data(db_session)
-    response = client.delete("/faculties/non-existent-faculty")
+    response = client.delete("/api/v1/faculties/non-existent-faculty")
     assert response.status_code == 404
     assert response.json()["error"]["code"] == "FACULTY_NOT_FOUND"
 
@@ -162,31 +162,31 @@ def test_faculty_crud_integration_with_validation_endpoint(client, db_session):
         "name": "Faculty of Humanities",
         "description": "Faculty of Humanities Department"
     }
-    create_res = client.post("/faculties", json=create_payload)
+    create_res = client.post("/api/v1/faculties", json=create_payload)
     assert create_res.status_code == 201
     fac_id = create_res.json()["data"]["id"]
 
     # 2. Validate via Daya's endpoint
-    val_res1 = client.get("/validation/faculties/FHUM")
+    val_res1 = client.get("/api/v1/validation/faculties/FHUM")
     assert val_res1.status_code == 200
     assert val_res1.json()["data"]["faculty_id"] == fac_id
     assert val_res1.json()["data"]["code"] == "FHUM"
     assert val_res1.json()["data"]["is_valid"] is True
 
     # 3. Update faculty
-    update_res = client.put(f"/faculties/{fac_id}", json={"name": "Faculty of Social Sciences & Humanities"})
+    update_res = client.put(f"/api/v1/faculties/{fac_id}", json={"name": "Faculty of Social Sciences & Humanities"})
     assert update_res.status_code == 200
 
     # 4. Re-validate via Daya's endpoint
-    val_res2 = client.get("/validation/faculties/FHUM")
+    val_res2 = client.get("/api/v1/validation/faculties/FHUM")
     assert val_res2.status_code == 200
     assert val_res2.json()["data"]["name"] == "Faculty of Social Sciences & Humanities"
 
     # 5. Delete faculty
-    del_res = client.delete(f"/faculties/{fac_id}")
+    del_res = client.delete(f"/api/v1/faculties/{fac_id}")
     assert del_res.status_code == 200
 
     # 6. Validate via Daya's endpoint -> now 404
-    val_res3 = client.get("/validation/faculties/FHUM")
+    val_res3 = client.get("/api/v1/validation/faculties/FHUM")
     assert val_res3.status_code == 404
     assert val_res3.json()["error"]["code"] == "FACULTY_NOT_FOUND"

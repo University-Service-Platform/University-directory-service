@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, status, Query
+from typing import Optional
 from sqlalchemy.orm import Session
+from app.auth import get_current_user, require_admin
 from app.database import get_db
 from app.services.service_unit_management_service import ServiceUnitManagementService
 from app.schemas.service_unit import (
@@ -9,10 +11,11 @@ from app.schemas.service_unit import (
     ServiceUnitListResponse
 )
 
-router = APIRouter(tags=["Service Units"])
+router = APIRouter(tags=["Service Units"], dependencies=[Depends(get_current_user)])
 
 @router.post(
     "/service-units",
+    dependencies=[Depends(require_admin)],
     response_model=ServiceUnitSingleResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create Service Unit",
@@ -36,10 +39,11 @@ def create_service_unit(
 def list_service_units(
     skip: int = Query(0, ge=0, description="Number of items to skip"),
     limit: int = Query(100, ge=1, le=500, description="Max items to return"),
+    q: Optional[str] = Query(None, max_length=100, description="Case-insensitive search in code, name and description"),
     db: Session = Depends(get_db)
 ):
     service = ServiceUnitManagementService(db)
-    units_data = service.list_service_units(skip=skip, limit=limit)
+    units_data = service.list_service_units(skip=skip, limit=limit, q=q)
     return ServiceUnitListResponse(success=True, data=units_data)
 
 @router.get(
@@ -59,6 +63,7 @@ def get_service_unit(
 
 @router.put(
     "/service-units/{service_unit_id}",
+    dependencies=[Depends(require_admin)],
     response_model=ServiceUnitSingleResponse,
     status_code=status.HTTP_200_OK,
     summary="Update Service Unit",
@@ -75,6 +80,7 @@ def update_service_unit(
 
 @router.delete(
     "/service-units/{service_unit_id}",
+    dependencies=[Depends(require_admin)],
     status_code=status.HTTP_200_OK,
     summary="Delete Service Unit",
     description="Permanently delete a service unit record."

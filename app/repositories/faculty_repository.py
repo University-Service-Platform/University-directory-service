@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from typing import Optional, List
 from app.models.faculty import Faculty
+from app.repositories.search import contains_any, normalise_query
 
 class FacultyRepository:
     def __init__(self, db: Session):
@@ -15,8 +16,12 @@ class FacultyRepository:
     def get_by_name(self, name: str) -> Optional[Faculty]:
         return self.db.query(Faculty).filter(Faculty.name == name).first()
 
-    def list_all(self, skip: int = 0, limit: int = 100) -> List[Faculty]:
-        return self.db.query(Faculty).offset(skip).limit(limit).all()
+    def list_all(self, skip: int = 0, limit: int = 100, q: Optional[str] = None) -> List[Faculty]:
+        query = self.db.query(Faculty)
+        term = normalise_query(q)
+        if term:
+            query = query.filter(contains_any(term, Faculty.code, Faculty.name, Faculty.description))
+        return query.order_by(Faculty.code).offset(skip).limit(limit).all()
 
     def create(self, faculty: Faculty) -> Faculty:
         self.db.add(faculty)

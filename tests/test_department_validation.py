@@ -29,7 +29,7 @@ def seed_department_data(db_session):
 
 def test_validate_department_by_id(client, db_session):
     seed_department_data(db_session)
-    response = client.get("/validation/departments/dept-cs-101")
+    response = client.get("/api/v1/validation/departments/dept-cs-101")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -42,7 +42,7 @@ def test_validate_department_by_id(client, db_session):
 
 def test_validate_department_by_code(client, db_session):
     seed_department_data(db_session)
-    response = client.get("/validation/departments/DEPT-SE")
+    response = client.get("/api/v1/validation/departments/DEPT-SE")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -51,7 +51,7 @@ def test_validate_department_by_code(client, db_session):
 
 def test_validate_unknown_department(client, db_session):
     seed_department_data(db_session)
-    response = client.get("/validation/departments/non-existent-dept")
+    response = client.get("/api/v1/validation/departments/non-existent-dept")
     assert response.status_code == 404
     data = response.json()
     assert data["success"] is False
@@ -59,7 +59,7 @@ def test_validate_unknown_department(client, db_session):
 
 def test_validate_malformed_department_id(client, db_session):
     seed_department_data(db_session)
-    response = client.get("/validation/departments/a")
+    response = client.get("/api/v1/validation/departments/a")
     assert response.status_code == 400
     data = response.json()
     assert data["success"] is False

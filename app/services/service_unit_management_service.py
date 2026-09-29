@@ -1,32 +1,23 @@
 from sqlalchemy.orm import Session
-from fastapi import HTTPException, status
+from fastapi import status
 import uuid
-import re
-from typing import List
-from datetime import datetime
+from typing import List, Optional
 
+from app.core.errors import AppError
+from app.core.time import utc_now
+from app.core.validators import ensure_code
 from app.models.service_unit import ServiceUnit
+from app.repositories.responsibility_repository import ServiceResponsibilityRepository
 from app.repositories.service_unit_repository import ServiceUnitRepository
 from app.schemas.service_unit import ServiceUnitCreate, ServiceUnitUpdate, ServiceUnitResponse
+from app.services.lookups import DirectoryLookup, ensure_no_dependencies
 
 class ServiceUnitManagementService:
     def __init__(self, db: Session):
         self.db = db
         self.repository = ServiceUnitRepository(db)
-
-    @staticmethod
-    def validate_code_format(code: str) -> bool:
-        if not code or not isinstance(code, str):
-            return False
-        pattern = r"^[a-zA-Z0-9_-]{2,20}$"
-        return bool(re.match(pattern, code.strip()))
-
-    @staticmethod
-    def validate_identifier_format(service_unit_id: str) -> bool:
-        if not service_unit_id or not isinstance(service_unit_id, str):
-            return False
-        pattern = r"^[a-zA-Z0-9_-]{2,50}$"
-        return bool(re.match(pattern, service_unit_id.strip()))
+        self.lookup = DirectoryLookup(db)
+        self.responsibilities = ServiceResponsibilityRepository(db)
 
     def _to_response(self, service_unit: ServiceUnit) -> ServiceUnitResponse:
         return ServiceUnitResponse(
@@ -37,133 +28,47 @@ class ServiceUnitManagementService:
             created_at=service_unit.created_at
         )
 
-    def create_service_unit(self, service_unit_in: ServiceUnitCreate) -> ServiceUnitResponse:
-        normalized_code = service_unit_in.code.strip().upper()
-        if not self.validate_code_format(normalized_code):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail={
-                    "success": False,
-                    "error": {
-                        "code": "INVALID_IDENTIFIER_FORMAT",
-                        "message": f"Service unit code '{service_unit_in.code}' has an invalid format."
-                    }
-                }
+    def _ensure_code_available(self, code: str, current_id: Optional[str] = None) -> None:
+        existing = self.repository.get_by_code(code)
+        if existing and existing.id != current_id:
+            raise AppError(
+                status.HTTP_409_CONFLICT,
+                "SERVICE_UNIT_CODE_ALREADY_EXISTS",
+                f"Service unit with code '{code}' already exists."
             )
 
-        # Check duplicate code
-        if self.repository.get_by_code(normalized_code):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail={
-                    "success": False,
-                    "error": {
-                        "code": "SERVICE_UNIT_CODE_ALREADY_EXISTS",
-                        "message": f"Service unit with code '{normalized_code}' already exists."
-                    }
-                }
-            )
+    def create_service_unit(self, service_unit_in: ServiceUnitCreate) -> ServiceUnitResponse:
+        normalized_code = service_unit_in.code.strip().upper()
+        ensure_code(normalized_code, "Service unit", display=service_unit_in.code)
+        self._ensure_code_available(normalized_code)
 
         new_unit = ServiceUnit(
             id=f"unit-{normalized_code.lower()}-{uuid.uuid4().hex[:6]}",
             code=normalized_code,
             name=service_unit_in.name.strip(),
             description=service_unit_in.description.strip() if service_unit_in.description else None,
-            created_at=datetime.utcnow()
+            created_at=utc_now()
         )
 
         persisted = self.repository.create(new_unit)
         return self._to_response(persisted)
 
-    def list_service_units(self, skip: int = 0, limit: int = 100) -> List[ServiceUnitResponse]:
-        units = self.repository.list_all(skip=skip, limit=limit)
+    def list_service_units(
+        self, skip: int = 0, limit: int = 100, q: Optional[str] = None
+    ) -> List[ServiceUnitResponse]:
+        units = self.repository.list_all(skip=skip, limit=limit, q=q)
         return [self._to_response(u) for u in units]
 
     def get_service_unit(self, service_unit_id: str) -> ServiceUnitResponse:
-        if not self.validate_identifier_format(service_unit_id):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail={
-                    "success": False,
-                    "error": {
-                        "code": "INVALID_IDENTIFIER_FORMAT",
-                        "message": f"Service unit identifier '{service_unit_id}' has an invalid format."
-                    }
-                }
-            )
-
-        unit = self.repository.get_by_id(service_unit_id)
-        if not unit:
-            unit = self.repository.get_by_code(service_unit_id.strip().upper())
-
-        if not unit:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail={
-                    "success": False,
-                    "error": {
-                        "code": "SERVICE_UNIT_NOT_FOUND",
-                        "message": f"Service unit with identifier '{service_unit_id}' was not found."
-                    }
-                }
-            )
-
-        return self._to_response(unit)
+        return self._to_response(self.lookup.service_unit(service_unit_id))
 
     def update_service_unit(self, service_unit_id: str, service_unit_update: ServiceUnitUpdate) -> ServiceUnitResponse:
-        if not self.validate_identifier_format(service_unit_id):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail={
-                    "success": False,
-                    "error": {
-                        "code": "INVALID_IDENTIFIER_FORMAT",
-                        "message": f"Service unit identifier '{service_unit_id}' has an invalid format."
-                    }
-                }
-            )
-
-        unit = self.repository.get_by_id(service_unit_id)
-        if not unit:
-            unit = self.repository.get_by_code(service_unit_id.strip().upper())
-
-        if not unit:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail={
-                    "success": False,
-                    "error": {
-                        "code": "SERVICE_UNIT_NOT_FOUND",
-                        "message": f"Service unit with identifier '{service_unit_id}' was not found."
-                    }
-                }
-            )
+        unit = self.lookup.service_unit(service_unit_id)
 
         if service_unit_update.code is not None:
             new_code = service_unit_update.code.strip().upper()
-            if not self.validate_code_format(new_code):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail={
-                        "success": False,
-                        "error": {
-                            "code": "INVALID_IDENTIFIER_FORMAT",
-                            "message": f"Service unit code '{new_code}' has an invalid format."
-                        }
-                    }
-                )
-            existing = self.repository.get_by_code(new_code)
-            if existing and existing.id != unit.id:
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail={
-                        "success": False,
-                        "error": {
-                            "code": "SERVICE_UNIT_CODE_ALREADY_EXISTS",
-                            "message": f"Service unit with code '{new_code}' already exists."
-                        }
-                    }
-                )
+            ensure_code(new_code, "Service unit")
+            self._ensure_code_available(new_code, current_id=unit.id)
             unit.code = new_code
 
         if service_unit_update.name is not None:
@@ -176,32 +81,12 @@ class ServiceUnitManagementService:
         return self._to_response(updated)
 
     def delete_service_unit(self, service_unit_id: str) -> None:
-        if not self.validate_identifier_format(service_unit_id):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail={
-                    "success": False,
-                    "error": {
-                        "code": "INVALID_IDENTIFIER_FORMAT",
-                        "message": f"Service unit identifier '{service_unit_id}' has an invalid format."
-                    }
-                }
-            )
-
-        unit = self.repository.get_by_id(service_unit_id)
-        if not unit:
-            unit = self.repository.get_by_code(service_unit_id.strip().upper())
-
-        if not unit:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail={
-                    "success": False,
-                    "error": {
-                        "code": "SERVICE_UNIT_NOT_FOUND",
-                        "message": f"Service unit with identifier '{service_unit_id}' was not found."
-                    }
-                }
-            )
-
+        unit = self.lookup.service_unit(service_unit_id)
+        ensure_no_dependencies(
+            "SERVICE_UNIT_HAS_DEPENDENCIES",
+            f"Service unit '{unit.code}'",
+            {
+                "responsibility(ies)": self.responsibilities.count_referencing(service_unit_id=unit.id),
+            },
+        )
         self.repository.delete(unit)

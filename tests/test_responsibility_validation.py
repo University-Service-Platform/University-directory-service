@@ -47,7 +47,7 @@ def seed_responsibility_data(db_session):
 
 def test_validate_actual_responsibility_relationship_success(client, db_session):
     seed_responsibility_data(db_session)
-    response = client.get("/validation/users/usr-staff-301/responsibilities")
+    response = client.get("/api/v1/validation/users/usr-staff-301/responsibilities")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -69,7 +69,7 @@ def test_missing_actual_relationship_rejected(client, db_session):
     User 'usr-staff-999' does NOT have a ServiceResponsibility record.
     """
     seed_responsibility_data(db_session)
-    response = client.get("/validation/users/usr-staff-999/responsibilities")
+    response = client.get("/api/v1/validation/users/usr-staff-999/responsibilities")
     assert response.status_code == 404
     data = response.json()
     assert data["success"] is False
@@ -77,7 +77,7 @@ def test_missing_actual_relationship_rejected(client, db_session):
 
 def test_inactive_responsibility_relationship_denied(client, db_session):
     seed_responsibility_data(db_session)
-    response = client.get("/validation/users/usr-staff-302/responsibilities")
+    response = client.get("/api/v1/validation/users/usr-staff-302/responsibilities")
     assert response.status_code == 403
     data = response.json()
     assert data["success"] is False
@@ -85,7 +85,7 @@ def test_inactive_responsibility_relationship_denied(client, db_session):
 
 def test_unknown_user_responsibility_rejected(client, db_session):
     seed_responsibility_data(db_session)
-    response = client.get("/validation/users/non-existent-user/responsibilities")
+    response = client.get("/api/v1/validation/users/non-existent-user/responsibilities")
     assert response.status_code == 404
     data = response.json()
     assert data["success"] is False
@@ -93,7 +93,7 @@ def test_unknown_user_responsibility_rejected(client, db_session):
 
 def test_malformed_user_identifier_rejected(client, db_session):
     seed_responsibility_data(db_session)
-    response = client.get("/validation/users/a/responsibilities")
+    response = client.get("/api/v1/validation/users/a/responsibilities")
     assert response.status_code == 400
     data = response.json()
     assert data["success"] is False

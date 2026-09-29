@@ -1,0 +1,2461 @@
+{
+  "info": {
+    "_postman_id": "1901f62f-c75f-5eea-8ea0-44f78dabcc05",
+    "name": "University Directory Service (Group 5)",
+    "description": "Functional tests for the University Directory Service API v1.\n\nRun folders in order (0 to 9). Folder 0 logs in through the Identity Service; every later request uses those tokens. All data created is synthetic, uniquely suffixed per run, and removed again in folder 9.\n\nEnvironment: docs/postman/directory-service.local.postman_environment.json. Fill in the synthetic demo credentials locally; never commit them.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0. Setup",
+      "description": "Gets tokens from the Identity Service. Fill the credentials in the environment (never commit them).",
+      "item": [
+        {
+          "name": "Health (public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/health",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"healthy\", () => pm.expect(pm.response.json().status).to.eql(\"healthy\"));"
+                ]
+              }
+            }
+          ],
+          "id": "421c1ab5-f704-53d6-8ed1-ea87aa2f41c2"
+        },
+        {
+          "name": "Login as admin (Identity Service)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{identityBaseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{identityBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{adminUsername}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"admin holds ADMIN\", () => pm.expect(d.roles).to.include(\"ADMIN\"));",
+                  "pm.collectionVariables.set(\"adminToken\", d.access_token);"
+                ]
+              }
+            }
+          ],
+          "id": "9dbf714e-6269-545f-8aa6-5484b25e3e71"
+        },
+        {
+          "name": "Login as non-admin (Identity Service)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{identityBaseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{identityBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{staffUsername}}\",\n  \"password\": \"{{staffPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"user is not ADMIN\", () => pm.expect(d.roles).to.not.include(\"ADMIN\"));",
+                  "pm.collectionVariables.set(\"staffToken\", d.access_token);"
+                ]
+              }
+            }
+          ],
+          "id": "b78112bb-7b0b-5a6a-a682-7884dd9badb9"
+        }
+      ],
+      "id": "dd305466-2fdd-59f5-af50-da7527d79440"
+    },
+    {
+      "name": "1. Authentication and errors",
+      "description": "",
+      "item": [
+        {
+          "name": "No token -> 401 UNAUTHORIZED",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/faculties",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "faculties"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"error code UNAUTHORIZED\", () => { const b = pm.response.json(); pm.expect(b.success).to.eql(false); pm.expect(b.error.code).to.eql(\"UNAUTHORIZED\"); });",
+                  "pm.test(\"WWW-Authenticate header\", () => pm.response.to.have.header(\"WWW-Authenticate\"));"
+                ]
+              }
+            }
+          ],
+          "id": "58c35158-b83f-52c0-8e51-ae812432ab38"
+        },
+        {
+          "name": "Invalid token -> 401 UNAUTHORIZED",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/faculties",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "faculties"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "not-a-valid-token",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"error code UNAUTHORIZED\", () => { const b = pm.response.json(); pm.expect(b.success).to.eql(false); pm.expect(b.error.code).to.eql(\"UNAUTHORIZED\"); });"
+                ]
+              }
+            }
+          ],
+          "id": "6b78aa82-919a-5cde-88bb-af842cb1658a"
+        },
+        {
+          "name": "Non-admin write -> 403 FORBIDDEN",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/faculties",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "faculties"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{staffToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"PMX\",\n  \"name\": \"Postman Synthetic X\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"error code FORBIDDEN\", () => { const b = pm.response.json(); pm.expect(b.success).to.eql(false); pm.expect(b.error.code).to.eql(\"FORBIDDEN\"); });"
+                ]
+              }
+            }
+          ],
+          "id": "e89506d6-644f-5c4c-9438-45abb0a2d9d9"
+        },
+        {
+          "name": "Non-admin read -> 200",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/faculties",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "faculties"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{staffToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"success envelope\", () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "id": "1925e577-7ef8-54a8-b9ed-c499fe58dcd5"
+        },
+        {
+          "name": "Missing field -> 422 VALIDATION_ERROR",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/faculties",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "faculties"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Synthetic Faculty\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"error code VALIDATION_ERROR\", () => { const b = pm.response.json(); pm.expect(b.success).to.eql(false); pm.expect(b.error.code).to.eql(\"VALIDATION_ERROR\"); });"
+                ]
+              }
+            }
+          ],
+          "id": "d5d3b519-6857-551b-ab95-54a252c6dc48"
+        },
+        {
+          "name": "Unknown faculty -> 404 FACULTY_NOT_FOUND",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/faculties/fac-postman-missing",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "faculties",
+                "fac-postman-missing"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"error code FACULTY_NOT_FOUND\", () => { const b = pm.response.json(); pm.expect(b.success).to.eql(false); pm.expect(b.error.code).to.eql(\"FACULTY_NOT_FOUND\"); });"
+                ]
+              }
+            }
+          ],
+          "id": "5c67a6cc-8f25-510e-963f-b94cd78f875c"
+        },
+        {
+          "name": "Invalid identifier -> 400 INVALID_IDENTIFIER_FORMAT",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/validation/faculties/bad$id",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "validation",
+                "faculties",
+                "bad$id"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"error code INVALID_IDENTIFIER_FORMAT\", () => { const b = pm.response.json(); pm.expect(b.success).to.eql(false); pm.expect(b.error.code).to.eql(\"INVALID_IDENTIFIER_FORMAT\"); });"
+                ]
+              }
+            }
+          ],
+          "id": "bf25674a-8177-523a-93b4-ea6b29d1da85"
+        }
+      ],
+      "id": "8455b9ce-ba31-5e4d-a708-6fc33f5a8b1f"
+    },
+    {
+      "name": "2. Faculties",
+      "description": "",
+      "item": [
+        {
+          "name": "Create faculty",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/faculties",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "faculties"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"PMF{{runSuffix}}\",\n  \"name\": \"Postman Synthetic Faculty {{runSuffix}}\",\n  \"description\": \"Synthetic test data created by Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const s = Math.random().toString(36).slice(2, 7).toUpperCase();",
+                  "pm.collectionVariables.set(\"runSuffix\", s);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"success envelope\", () => pm.expect(pm.response.json().success).to.eql(true));",
+                  "pm.collectionVariables.set(\"facultyId\", pm.response.json().data.id);",
+                  "pm.collectionVariables.set(\"facultyCode\", pm.response.json().data.code);"
+                ]
+              }
+            }
+          ],
+          "id": "42edf144-a1a9-5d89-8352-cde8f1f3bfd0"
+        },
+        {
+          "name": "Duplicate faculty code -> 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/faculties",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "faculties"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{facultyCode}}\",\n  \"name\": \"Postman Duplicate\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"error code FACULTY_CODE_ALREADY_EXISTS\", () => { const b = pm.response.json(); pm.expect(b.success).to.eql(false); pm.expect(b.error.code).to.eql(\"FACULTY_CODE_ALREADY_EXISTS\"); });"
+                ]
+              }
+            }
+          ],
+          "id": "f933df67-0e97-575e-ab0a-7fe057c54ec6"
+        },
+        {
+          "name": "Get faculty by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/faculties/{{facultyId}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "faculties",
+                "{{facultyId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"same id\", () => pm.expect(pm.response.json().data.id).to.eql(pm.collectionVariables.get(\"facultyId\")));"
+                ]
+              }
+            }
+          ],
+          "id": "bfd998d7-a6c8-5512-97bd-054f2dd295ba"
+        },
+        {
+          "name": "Get faculty by code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/faculties/{{facultyCode}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "faculties",
+                "{{facultyCode}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "id": "da727cbd-f829-5f78-809c-225b22e838b7"
+        },
+        {
+          "name": "Search faculties (q)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/faculties?q={{runSuffix}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "faculties"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "{{runSuffix}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"search finds the faculty\", () => pm.expect(pm.response.json().data.map(f => f.id)).to.include(pm.collectionVariables.get(\"facultyId\")));"
+                ]
+              }
+            }
+          ],
+          "id": "5a13a83c-a817-50c7-8703-76b96c3c0e26"
+        },
+        {
+          "name": "Update faculty",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/faculties/{{facultyId}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "faculties",
+                "{{facultyId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated by Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"updated\", () => pm.expect(pm.response.json().data.description).to.eql(\"Updated by Postman\"));"
+                ]
+              }
+            }
+          ],
+          "id": "0992fce6-4358-5b71-83aa-5979949a1e41"
+        }
+      ],
+      "id": "2b67daca-62f5-587c-acab-4880f72c15c4"
+    },
+    {
+      "name": "3. Departments",
+      "description": "",
+      "item": [
+        {
+          "name": "Create department",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/departments",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "departments"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"PMD{{runSuffix}}\",\n  \"name\": \"Postman Synthetic Department {{runSuffix}}\",\n  \"faculty_id\": \"{{facultyCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"departmentId\", pm.response.json().data.id);",
+                  "pm.test(\"faculty code resolved to id\", () => pm.expect(pm.response.json().data.faculty_id).to.eql(pm.collectionVariables.get(\"facultyId\")));"
+                ]
+              }
+            }
+          ],
+          "id": "6bd0c4bd-0b90-515b-bb47-8514e2a41b6a"
+        },
+        {
+          "name": "Get department",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/departments/{{departmentId}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "departments",
+                "{{departmentId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "id": "8b396cd8-feac-5102-9d70-d96183e3f6dd"
+        },
+        {
+          "name": "Patch department",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/departments/{{departmentId}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "departments",
+                "{{departmentId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Synthetic Department {{runSuffix}} (patched)\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "id": "8cb0d8f9-fad0-5323-af20-50386b0a8de5"
+        },
+        {
+          "name": "List departments by faculty + search",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/departments?faculty_id={{facultyId}}&q=patched",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "departments"
+              ],
+              "query": [
+                {
+                  "key": "faculty_id",
+                  "value": "{{facultyId}}"
+                },
+                {
+                  "key": "q",
+                  "value": "patched"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"one match\", () => pm.expect(pm.response.json().data).to.have.lengthOf(1));"
+                ]
+              }
+            }
+          ],
+          "id": "c74b39ba-5bca-5beb-a2fa-e25a06dfe513"
+        }
+      ],
+      "id": "6c709592-fd52-53a5-bf8a-9cbaacd233ce"
+    },
+    {
+      "name": "4. Service units",
+      "description": "",
+      "item": [
+        {
+          "name": "Create service unit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/service-units",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "service-units"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"PMU{{runSuffix}}\",\n  \"name\": \"Postman Synthetic Unit {{runSuffix}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"unitId\", pm.response.json().data.id);"
+                ]
+              }
+            }
+          ],
+          "id": "52fd78e1-4e0e-57c7-b562-64916930eba9"
+        },
+        {
+          "name": "Get service unit",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/service-units/{{unitId}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "service-units",
+                "{{unitId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "id": "420c54c2-20d0-5888-a0a7-fca09c7f251a"
+        },
+        {
+          "name": "Search service units (q)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/service-units?q=PMU{{runSuffix}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "service-units"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "PMU{{runSuffix}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"one match\", () => pm.expect(pm.response.json().data).to.have.lengthOf(1));"
+                ]
+              }
+            }
+          ],
+          "id": "10b296a0-9542-5034-af50-5c1bab15eac4"
+        }
+      ],
+      "id": "97b842e1-9e4a-51d4-b6d1-dfb9c78c4550"
+    },
+    {
+      "name": "5. Affiliations (Identity check)",
+      "description": "",
+      "item": [
+        {
+          "name": "Create affiliation (user checked with Identity)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/affiliations",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "affiliations"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{affiliationUserId}}\",\n  \"department_id\": \"{{departmentId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"affiliationId\", pm.response.json().data.id);",
+                  "pm.collectionVariables.set(\"affiliatedUserId\", pm.response.json().data.user_id);",
+                  "pm.test(\"stored user id is the canonical Identity id\", () => pm.expect(pm.response.json().data.user_id).to.match(/^usr-/));"
+                ]
+              }
+            }
+          ],
+          "id": "bf868e9e-307a-537e-9b1d-84c2fcd6f887"
+        },
+        {
+          "name": "Duplicate affiliation -> 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/affiliations",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "affiliations"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{affiliationUserId}}\",\n  \"department_id\": \"{{departmentId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"error code AFFILIATION_ALREADY_EXISTS\", () => { const b = pm.response.json(); pm.expect(b.success).to.eql(false); pm.expect(b.error.code).to.eql(\"AFFILIATION_ALREADY_EXISTS\"); });"
+                ]
+              }
+            }
+          ],
+          "id": "d492c36f-f7b8-536e-82f4-9049549b6d28"
+        },
+        {
+          "name": "Unknown user -> 404 USER_NOT_FOUND",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/affiliations",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "affiliations"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"usr-postman-unknown-999\",\n  \"department_id\": \"{{departmentId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"error code USER_NOT_FOUND\", () => { const b = pm.response.json(); pm.expect(b.success).to.eql(false); pm.expect(b.error.code).to.eql(\"USER_NOT_FOUND\"); });"
+                ]
+              }
+            }
+          ],
+          "id": "3a5646e4-e054-5a0a-8b6e-678a074b25ef"
+        },
+        {
+          "name": "Get affiliation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/affiliations/{{affiliationId}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "affiliations",
+                "{{affiliationId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "id": "046d0f75-6d94-587e-8080-4ab6539139b0"
+        },
+        {
+          "name": "Search affiliations (q)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/affiliations?q=PMD{{runSuffix}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "affiliations"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "PMD{{runSuffix}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"one match\", () => pm.expect(pm.response.json().data).to.have.lengthOf(1));"
+                ]
+              }
+            }
+          ],
+          "id": "0e6a2434-05bd-555f-90ff-e8cd33d978c2"
+        }
+      ],
+      "id": "2d35aafd-9aed-5018-9280-6183320d7251"
+    },
+    {
+      "name": "6. Service responsibilities",
+      "description": "",
+      "item": [
+        {
+          "name": "Create responsibility",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/responsibilities",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "responsibilities"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{responsibleUserId}}\",\n  \"service_unit_id\": \"{{unitId}}\",\n  \"role_title\": \"Postman Unit Coordinator\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"responsibilityId\", pm.response.json().data.id);",
+                  "pm.collectionVariables.set(\"responsibleCanonicalId\", pm.response.json().data.user_id);",
+                  "pm.test(\"ACTIVE by default\", () => pm.expect(pm.response.json().data.status).to.eql(\"ACTIVE\"));"
+                ]
+              }
+            }
+          ],
+          "id": "baa3f3f8-0f18-56ee-8014-66c7d09d67cb"
+        },
+        {
+          "name": "Duplicate active responsibility -> 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/responsibilities",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "responsibilities"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{responsibleUserId}}\",\n  \"service_unit_id\": \"{{unitId}}\",\n  \"role_title\": \"Other\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"error code RESPONSIBILITY_ALREADY_EXISTS\", () => { const b = pm.response.json(); pm.expect(b.success).to.eql(false); pm.expect(b.error.code).to.eql(\"RESPONSIBILITY_ALREADY_EXISTS\"); });"
+                ]
+              }
+            }
+          ],
+          "id": "1d9f21d8-fcca-5516-989d-b1cc48b588fe"
+        },
+        {
+          "name": "No organizational target -> 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/responsibilities",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "responsibilities"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{responsibleUserId}}\",\n  \"role_title\": \"Floating\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"error code VALIDATION_ERROR\", () => { const b = pm.response.json(); pm.expect(b.success).to.eql(false); pm.expect(b.error.code).to.eql(\"VALIDATION_ERROR\"); });"
+                ]
+              }
+            }
+          ],
+          "id": "15a2ebc9-5370-5b0f-a99b-12129bc8504f"
+        },
+        {
+          "name": "List responsibilities for unit",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/responsibilities?service_unit_id={{unitId}}&status=ACTIVE",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "responsibilities"
+              ],
+              "query": [
+                {
+                  "key": "service_unit_id",
+                  "value": "{{unitId}}"
+                },
+                {
+                  "key": "status",
+                  "value": "ACTIVE"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"one\", () => pm.expect(pm.response.json().data).to.have.lengthOf(1));"
+                ]
+              }
+            }
+          ],
+          "id": "de0e4380-2f18-5766-88f0-0c8d801974a3"
+        },
+        {
+          "name": "Deactivate responsibility",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/responsibilities/{{responsibilityId}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "responsibilities",
+                "{{responsibilityId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"INACTIVE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "id": "b1610ef2-00f3-5cd5-8c74-b1d5cb55474e"
+        },
+        {
+          "name": "Reactivate responsibility",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/responsibilities/{{responsibilityId}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "responsibilities",
+                "{{responsibilityId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACTIVE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "id": "6e88b7db-5b23-56ca-8cef-88dad6805c71"
+        }
+      ],
+      "id": "8fcc95d5-dba1-5907-b98f-41254f572418"
+    },
+    {
+      "name": "7. Validation APIs (for Groups 6-8)",
+      "description": "",
+      "item": [
+        {
+          "name": "Validate faculty (by code)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/validation/faculties/{{facultyCode}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "validation",
+                "faculties",
+                "{{facultyCode}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{staffToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"is_valid\", () => pm.expect(pm.response.json().data.is_valid).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "id": "c6484e7e-7ccd-5b92-93e3-c8a28eeddce9"
+        },
+        {
+          "name": "Validate department",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/validation/departments/{{departmentId}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "validation",
+                "departments",
+                "{{departmentId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{staffToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"is_valid\", () => pm.expect(pm.response.json().data.is_valid).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "id": "4b1b1097-b312-5ec4-bfef-6d63ee10cba5"
+        },
+        {
+          "name": "Validate service unit",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/validation/service-units/{{unitId}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "validation",
+                "service-units",
+                "{{unitId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{staffToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"is_valid\", () => pm.expect(pm.response.json().data.is_valid).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "id": "88cf18f4-9e1a-561d-89bf-c2cb7f8c081c"
+        },
+        {
+          "name": "Validate user affiliation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/validation/users/{{affiliatedUserId}}/affiliation?department_id={{departmentId}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "validation",
+                "users",
+                "{{affiliatedUserId}}",
+                "affiliation"
+              ],
+              "query": [
+                {
+                  "key": "department_id",
+                  "value": "{{departmentId}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{staffToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"is_valid\", () => pm.expect(pm.response.json().data.is_valid).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "id": "a9eb02ce-46ab-596a-89b8-f4a2233dbe93"
+        },
+        {
+          "name": "Affiliation mismatch -> 404 AFFILIATION_NOT_FOUND",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/validation/users/usr-postman-nobody/affiliation?faculty_id={{facultyId}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "validation",
+                "users",
+                "usr-postman-nobody",
+                "affiliation"
+              ],
+              "query": [
+                {
+                  "key": "faculty_id",
+                  "value": "{{facultyId}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{staffToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"error code AFFILIATION_NOT_FOUND\", () => { const b = pm.response.json(); pm.expect(b.success).to.eql(false); pm.expect(b.error.code).to.eql(\"AFFILIATION_NOT_FOUND\"); });"
+                ]
+              }
+            }
+          ],
+          "id": "4f05ad73-eabc-56fc-b960-8ce8935ffc83"
+        },
+        {
+          "name": "Validate user responsibilities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/validation/users/{{responsibleCanonicalId}}/responsibilities?service_unit_id={{unitId}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "validation",
+                "users",
+                "{{responsibleCanonicalId}}",
+                "responsibilities"
+              ],
+              "query": [
+                {
+                  "key": "service_unit_id",
+                  "value": "{{unitId}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{staffToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"is_valid\", () => pm.expect(pm.response.json().data.is_valid).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "id": "c482ebc7-e137-5431-b014-e106066e6b40"
+        }
+      ],
+      "id": "869210b8-5afb-501e-a621-52f25dfb2ffa"
+    },
+    {
+      "name": "8. Delete protection (409)",
+      "description": "",
+      "item": [
+        {
+          "name": "Delete faculty with departments -> 409",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/faculties/{{facultyId}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "faculties",
+                "{{facultyId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"error code FACULTY_HAS_DEPENDENCIES\", () => { const b = pm.response.json(); pm.expect(b.success).to.eql(false); pm.expect(b.error.code).to.eql(\"FACULTY_HAS_DEPENDENCIES\"); });"
+                ]
+              }
+            }
+          ],
+          "id": "124df434-2094-56d6-b8ce-573fcc67cf8b"
+        },
+        {
+          "name": "Delete department with affiliations -> 409",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/departments/{{departmentId}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "departments",
+                "{{departmentId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"error code DEPARTMENT_HAS_DEPENDENCIES\", () => { const b = pm.response.json(); pm.expect(b.success).to.eql(false); pm.expect(b.error.code).to.eql(\"DEPARTMENT_HAS_DEPENDENCIES\"); });"
+                ]
+              }
+            }
+          ],
+          "id": "1427ae8d-0590-56be-8b83-41085cb8ddfc"
+        },
+        {
+          "name": "Delete service unit with responsibilities -> 409",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/service-units/{{unitId}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "service-units",
+                "{{unitId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"error code SERVICE_UNIT_HAS_DEPENDENCIES\", () => { const b = pm.response.json(); pm.expect(b.success).to.eql(false); pm.expect(b.error.code).to.eql(\"SERVICE_UNIT_HAS_DEPENDENCIES\"); });"
+                ]
+              }
+            }
+          ],
+          "id": "78d5db73-2afe-5d5e-943e-684fac68d18f"
+        }
+      ],
+      "id": "08bac03f-12c5-5ada-8ddd-9be8c476f334"
+    },
+    {
+      "name": "9. Cleanup",
+      "description": "",
+      "item": [
+        {
+          "name": "Delete responsibility",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/responsibilities/{{responsibilityId}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "responsibilities",
+                "{{responsibilityId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "id": "ac2073ce-b86b-5e59-8225-6bccaa124650"
+        },
+        {
+          "name": "Delete affiliation",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/affiliations/{{affiliationId}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "affiliations",
+                "{{affiliationId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "id": "06193579-f7b9-539f-8795-9d664b757eaf"
+        },
+        {
+          "name": "Delete service unit",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/service-units/{{unitId}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "service-units",
+                "{{unitId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "id": "89f62c3f-998f-5123-b8b7-32f15405d239"
+        },
+        {
+          "name": "Delete department",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/departments/{{departmentId}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "departments",
+                "{{departmentId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "id": "9a1083b6-aa99-56fc-9a36-d9a311821469"
+        },
+        {
+          "name": "Delete faculty",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/faculties/{{facultyId}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "faculties",
+                "{{facultyId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "id": "59dabc41-8537-51bc-86fd-831407586827"
+        },
+        {
+          "name": "Deleted faculty -> 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{directoryBaseUrl}}/api/v1/faculties/{{facultyId}}",
+              "host": [
+                "{{directoryBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "faculties",
+                "{{facultyId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"error code FACULTY_NOT_FOUND\", () => { const b = pm.response.json(); pm.expect(b.success).to.eql(false); pm.expect(b.error.code).to.eql(\"FACULTY_NOT_FOUND\"); });"
+                ]
+              }
+            }
+          ],
+          "id": "6ecd7c4e-cb6b-52f1-9e8b-ff085d7ee9b9"
+        }
+      ],
+      "id": "028b38be-f2b8-5c59-89a3-84d9cccb313c"
+    }
+  ],
+  "variable": [
+    {
+      "key": "runSuffix",
+      "value": ""
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "staffToken",
+      "value": ""
+    },
+    {
+      "key": "facultyId",
+      "value": ""
+    },
+    {
+      "key": "facultyCode",
+      "value": ""
+    },
+    {
+      "key": "departmentId",
+      "value": ""
+    },
+    {
+      "key": "unitId",
+      "value": ""
+    },
+    {
+      "key": "affiliationId",
+      "value": ""
+    },
+    {
+      "key": "affiliatedUserId",
+      "value": ""
+    },
+    {
+      "key": "responsibilityId",
+      "value": ""
+    },
+    {
+      "key": "responsibleCanonicalId",
+      "value": ""
+    }
+  ]
+}

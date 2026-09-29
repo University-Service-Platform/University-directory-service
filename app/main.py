@@ -1,58 +1,56 @@
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import JSONResponse
-from app.database import engine, Base
+from fastapi import Depends, FastAPI
+from app.core.errors import register_exception_handlers
+from app.core.versioning import API_V1_PREFIX, mark_legacy_route
 from app.routes.validation import router as validation_router
 from app.routes.health import router as health_router
 from app.routes.faculties import router as faculties_router
 from app.routes.service_units import router as service_units_router
 from app.routes.departments import router as departments_router
 from app.routes.affiliations import router as affiliations_router
-import app.models  # Ensure all models are registered
+from app.routes.responsibilities import router as responsibilities_router
+import app.models  # noqa: F401  (register all models)
 
-# Create database tables
-Base.metadata.create_all(bind=engine)
+# The schema is managed by Alembic: run `alembic upgrade head` before starting.
 
 app = FastAPI(
     title="University Directory Service",
-    description="Directory microservice handling Faculties, Departments, Service Units, and Responsibilities.",
+    description="Directory microservice handling Faculties, Departments, Service Units, "
+                "User Affiliations and Service Responsibilities. Versioned API under /api/v1.",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
 )
 
-@app.exception_handler(HTTPException)
-async def custom_http_exception_handler(request: Request, exc: HTTPException):
-    if isinstance(exc.detail, dict) and "success" in exc.detail:
-        return JSONResponse(status_code=exc.status_code, content=exc.detail)
-    
-    code = "HTTP_ERROR"
-    if exc.status_code == 400:
-        code = "BAD_REQUEST"
-    elif exc.status_code == 401:
-        code = "UNAUTHORIZED"
-    elif exc.status_code == 403:
-        code = "FORBIDDEN"
-    elif exc.status_code == 404:
-        code = "NOT_FOUND"
-    elif exc.status_code == 409:
-        code = "CONFLICT"
+register_exception_handlers(app)
 
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={
-            "success": False,
-            "error": {
-                "code": code,
-                "message": str(exc.detail)
-            }
-        }
-    )
+API_V1_ROUTERS = [
+    validation_router,
+    faculties_router,
+    service_units_router,
+    departments_router,
+    affiliations_router,
+    responsibilities_router,
+]
+
+# Routers that existed before versioning; their unprefixed paths stay as
+# deprecated aliases (hidden from OpenAPI) until dependent services migrate.
+LEGACY_ALIAS_ROUTERS = [
+    validation_router,
+    faculties_router,
+    service_units_router,
+    departments_router,
+    affiliations_router,
+]
 
 app.include_router(health_router)
-app.include_router(validation_router)
-app.include_router(faculties_router)
-app.include_router(service_units_router)
-app.include_router(departments_router)
-app.include_router(affiliations_router)
 
+for router in API_V1_ROUTERS:
+    app.include_router(router, prefix=API_V1_PREFIX)
 
+for router in LEGACY_ALIAS_ROUTERS:
+    app.include_router(
+        router,
+        include_in_schema=False,
+        deprecated=True,
+        dependencies=[Depends(mark_legacy_route)],
+    )
