@@ -207,6 +207,11 @@ class FakeIdentityClient:
     def __init__(self, result):
         self.result = result
         self.calls = []
+        self.forwarded = []
+
+    def with_authorization(self, authorization):
+        self.forwarded.append(authorization)
+        return self
 
     def get_active_user(self, user_id):
         self.calls.append(user_id)
@@ -221,15 +226,18 @@ def hs_token(sub="usr-admin-001", expires_in=300, secret=HS_SECRET, **extra):
 
 
 def test_hs256_verifier_takes_roles_from_identity_service():
-    identity = FakeIdentityClient(IdentityUser("usr-admin-001", "ACTIVE", ("ADMIN",)))
-    principal = IdentityHs256TokenVerifier(HS_SECRET, identity).verify(hs_token())
+    identity = FakeIdentityClient(IdentityUser("usr-admin-001", "ACTIVE", True, ("ADMIN",)))
+    token = hs_token()
+    principal = IdentityHs256TokenVerifier(HS_SECRET, identity).verify(token)
     assert principal.user_id == "usr-admin-001"
     assert principal.roles == frozenset({"ADMIN"})
+    assert principal.roles_verified_live is True
     assert identity.calls == ["usr-admin-001"]
+    assert identity.forwarded == [f"Bearer {token}"]
 
 
 def test_hs256_verifier_ignores_roles_claim_in_token():
-    identity = FakeIdentityClient(IdentityUser("usr-1", "ACTIVE", ("STUDENT",)))
+    identity = FakeIdentityClient(IdentityUser("usr-1", "ACTIVE", True, ("STUDENT",)))
     principal = IdentityHs256TokenVerifier(HS_SECRET, identity).verify(hs_token("usr-1", roles=["ADMIN"]))
     assert principal.roles == frozenset({"STUDENT"})
 
@@ -241,7 +249,7 @@ def test_hs256_verifier_ignores_roles_claim_in_token():
     make_rs256_token(),
 ])
 def test_hs256_verifier_rejects_invalid_tokens(token):
-    identity = FakeIdentityClient(IdentityUser("usr-1", "ACTIVE", ("ADMIN",)))
+    identity = FakeIdentityClient(IdentityUser("usr-1", "ACTIVE", True, ("ADMIN",)))
     with pytest.raises(InvalidTokenError):
         IdentityHs256TokenVerifier(HS_SECRET, identity).verify(token)
     assert identity.calls == []
@@ -265,12 +273,21 @@ def test_hs256_verifier_propagates_identity_outage():
 # Verifier selection from configuration
 # ---------------------------------------------------------------------------
 
-def test_default_mode_builds_hs256_verifier():
-    settings = load_settings({"JWT_SECRET_KEY": HS_SECRET, "IDENTITY_SERVICE_BASE_URL": "http://identity.test"})
+def test_default_mode_builds_jwks_verifier_with_contract_iss_and_aud():
+    settings = load_settings({"IDENTITY_SERVICE_BASE_URL": "http://identity.test"})
+    verifier = build_token_verifier(settings)
+    assert isinstance(verifier, JwksTokenVerifier)
+    assert verifier.issuer == "university-identity-service"
+    assert verifier.audience == "university-services-platform"
+
+
+def test_legacy_hs256_mode_builds_hs256_verifier():
+    settings = load_settings({"AUTH_MODE": "identity-hs256", "JWT_SECRET_KEY": HS_SECRET,
+                              "IDENTITY_SERVICE_BASE_URL": "http://identity.test"})
     assert isinstance(build_token_verifier(settings), IdentityHs256TokenVerifier)
 
 
-def test_jwks_mode_builds_jwks_verifier():
+def test_jwks_mode_uses_configured_issuer_and_audience():
     settings = load_settings({
         "AUTH_MODE": "jwks",
         "IDENTITY_SERVICE_BASE_URL": "http://identity.test",
@@ -283,8 +300,8 @@ def test_jwks_mode_builds_jwks_verifier():
 
 
 @pytest.mark.parametrize("env", [
-    {},  # identity-hs256 without JWT_SECRET_KEY
-    {"AUTH_MODE": "jwks", "IDENTITY_SERVICE_BASE_URL": "http://identity.test"},  # no iss/aud
+    {},  # jwks (default) without IDENTITY_SERVICE_BASE_URL or JWKS_URL
+    {"AUTH_MODE": "identity-hs256", "IDENTITY_SERVICE_BASE_URL": "http://identity.test"},  # no JWT_SECRET_KEY
 ])
 def test_missing_configuration_fails_closed(env):
     with pytest.raises(AppError) as exc_info:

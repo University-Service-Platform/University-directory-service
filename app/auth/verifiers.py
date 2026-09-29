@@ -1,12 +1,13 @@
 """Token verifiers. Each one turns a bearer token into the same Principal.
 
-- JwksTokenVerifier: target contract. RS256 signature checked against the
-  Identity Service JWKS; iss, aud, exp and sub required; roles read from the
-  token's "roles" claim.
-- IdentityHs256TokenVerifier: compatibility with the current Identity Service,
-  which signs HS256 tokens with a shared JWT_SECRET_KEY and puts no roles,
-  iss or aud in them. Signature and exp are checked locally; the subject's
-  status and roles come from the Identity Service validation endpoint.
+- JwksTokenVerifier (AUTH_MODE=jwks, default): Identity API contract v1.
+  RS256 signature checked against the Identity Service JWKS; iss, aud, exp and
+  sub required; roles read from the token's "roles" claim (a login-time
+  snapshot, re-confirmed live before protected actions).
+- IdentityHs256TokenVerifier (AUTH_MODE=identity-hs256, legacy): the Sprint 1
+  Identity Service, which signed HS256 tokens with a shared JWT_SECRET_KEY and
+  put no roles, iss or aud in them. Signature and exp are checked locally; the
+  subject's status and roles come live from the Identity validation endpoint.
 """
 import logging
 import threading
@@ -184,10 +185,10 @@ class IdentityHs256TokenVerifier:
 
         subject = _require_subject(claims)
         try:
-            user = self.identity_client.get_active_user(subject)
+            user = self.identity_client.with_authorization(f"Bearer {token}").get_active_user(subject)
         except AppError as exc:
-            if exc.code in ("USER_NOT_FOUND", "USER_INACTIVE"):
+            if exc.code in ("USER_NOT_FOUND", "USER_INACTIVE", "UNAUTHORIZED", "FORBIDDEN"):
                 raise InvalidTokenError("Authentication token subject is not an active user.")
             raise  # Identity Service unavailable/error: surfaced as 503/502
 
-        return Principal.build(subject, user.roles)
+        return Principal.build(subject, user.roles, roles_verified_live=True)

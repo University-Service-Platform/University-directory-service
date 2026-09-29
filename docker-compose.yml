@@ -3,6 +3,7 @@
 #
 # The Identity Service is a separate repository/deployment; point
 # IDENTITY_SERVICE_BASE_URL at wherever it runs (for example
+# http://identity-service:8001 on a shared Compose network, or
 # http://host.docker.internal:8001 when it runs on the host).
 
 services:
@@ -16,7 +17,7 @@ services:
       IDENTITY_SERVICE_BASE_URL: ${IDENTITY_SERVICE_BASE_URL:?Set IDENTITY_SERVICE_BASE_URL}
       IDENTITY_TIMEOUT_CONNECT: ${IDENTITY_TIMEOUT_CONNECT:-3}
       IDENTITY_TIMEOUT_READ: ${IDENTITY_TIMEOUT_READ:-5}
-      AUTH_MODE: ${AUTH_MODE:-identity-hs256}
+      AUTH_MODE: ${AUTH_MODE:-jwks}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-}
       JWT_ISSUER: ${JWT_ISSUER:-}
       JWT_AUDIENCE: ${JWT_AUDIENCE:-}

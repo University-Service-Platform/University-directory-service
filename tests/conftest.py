@@ -32,7 +32,9 @@ def db_session():
 @pytest.fixture(scope="function")
 def identity_client():
     """Fake Identity Service; every user is ACTIVE unless a test configures otherwise."""
-    return FakeIdentityClient()
+    fake = FakeIdentityClient()
+    fake.roles["usr-admin-001"] = ("ADMIN",)  # matches the synthetic ADMIN_TOKEN subject
+    return fake
 
 @pytest.fixture(scope="function")
 def anon_client(db_session, identity_client):

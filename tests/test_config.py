@@ -1,7 +1,6 @@
 import pytest
 
 from app.config import (
-    AUTH_MODE_IDENTITY_HS256,
     AUTH_MODE_JWKS,
     DEFAULT_DATABASE_URL,
     ConfigurationError,
@@ -16,7 +15,9 @@ def test_defaults_when_environment_is_empty():
     assert settings.identity_service_base_url is None
     assert settings.identity_timeout_connect == 3.0
     assert settings.identity_timeout_read == 5.0
-    assert settings.auth_mode == AUTH_MODE_IDENTITY_HS256
+    assert settings.auth_mode == AUTH_MODE_JWKS
+    assert settings.jwt_issuer == "university-identity-service"
+    assert settings.jwt_audience == "university-services-platform"
     assert settings.jwt_secret_key is None
     assert settings.resolved_jwks_url is None
 

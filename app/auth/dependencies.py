@@ -1,6 +1,6 @@
 import logging
 from functools import lru_cache
-from typing import Callable, Optional
+from typing import Callable, Optional, Tuple
 
 from fastapi import Depends, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -16,7 +16,7 @@ from app.auth.verifiers import (
 )
 from app.config import AUTH_MODE_JWKS, Settings, get_settings
 from app.core.errors import AppError
-from app.integrations.identity_client import IdentityClient
+from app.integrations.identity_client import IdentityClient, get_identity_client
 
 logger = logging.getLogger(__name__)
 
@@ -87,16 +87,41 @@ def get_current_user(
         raise _unauthorized(str(exc))
 
 
+def _confirm_roles_live(principal: Principal, required: Tuple[str, ...], identity: IdentityClient) -> None:
+    """Token roles are a login-time snapshot: confirm with the Identity Service before a protected action."""
+    try:
+        for role in required:
+            user = identity.lookup_user(principal.user_id, required_role=role)
+            if not user.is_active:
+                raise AppError(status.HTTP_403_FORBIDDEN, "FORBIDDEN", "Your account is not active.")
+            if user.is_authorized:
+                return
+    except AppError as exc:
+        if exc.code == "USER_NOT_FOUND":
+            raise _unauthorized("Authentication token subject no longer exists.")
+        raise
+    raise AppError(
+        status.HTTP_403_FORBIDDEN,
+        "FORBIDDEN",
+        f"This operation requires one of the roles: {', '.join(required)}.",
+    )
+
+
 def require_roles(*roles: str) -> Callable[..., Principal]:
     required = tuple(role.upper() for role in roles)
 
-    def dependency(principal: Principal = Depends(get_current_user)) -> Principal:
+    def dependency(
+        principal: Principal = Depends(get_current_user),
+        identity: IdentityClient = Depends(get_identity_client),
+    ) -> Principal:
         if not principal.has_any_role(required):
             raise AppError(
                 status.HTTP_403_FORBIDDEN,
                 "FORBIDDEN",
                 f"This operation requires one of the roles: {', '.join(required)}.",
             )
+        if not principal.roles_verified_live:
+            _confirm_roles_live(principal, required, identity)
         return principal
 
     return dependency

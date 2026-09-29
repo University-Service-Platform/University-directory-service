@@ -19,11 +19,15 @@ class AffiliationManagementService:
         self.lookup = DirectoryLookup(db)
         self.identity_client = identity_client
 
-    def _ensure_active_user(self, user_id: str) -> None:
-        """Identity Service owns users: confirm the user exists and is ACTIVE before writing."""
+    def _ensure_active_user(self, user_id: str) -> str:
+        """Identity Service owns users: confirm the user exists and is ACTIVE before writing.
+
+        Returns the canonical Identity user id (the JWT `sub`), which is what gets stored,
+        even when the caller supplied a university id.
+        """
         if self.identity_client is None:
             raise RuntimeError("AffiliationManagementService needs an IdentityClient for write operations")
-        self.identity_client.get_active_user(user_id)
+        return self.identity_client.get_active_user(user_id).user_id
 
     def _to_response(self, affiliation: UserAffiliation) -> AffiliationResponse:
         return AffiliationResponse(
@@ -60,8 +64,7 @@ class AffiliationManagementService:
             )
 
     def create_affiliation(self, affiliation_in: AffiliationCreate) -> AffiliationResponse:
-        user_id = ensure_identifier(affiliation_in.user_id, "User")
-        self._ensure_active_user(user_id)
+        user_id = self._ensure_active_user(ensure_identifier(affiliation_in.user_id, "User"))
         dept = self.lookup.department(affiliation_in.department_id)
 
         target_faculty_id = dept.faculty_id

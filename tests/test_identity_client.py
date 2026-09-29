@@ -1,4 +1,4 @@
-"""Identity Service client: every downstream outcome maps to a Directory error. No network."""
+"""Identity Service client (Identity API contract v1): every downstream outcome maps to a Directory error. No network."""
 import httpx
 import pytest
 
@@ -9,8 +9,9 @@ BASE_URL = "http://identity.test"
 LEAKY_TEXT = "Traceback (internal): db-host-7 connection refused at identity/core.py:42"
 
 
-def make_client(handler, base_url=BASE_URL):
-    return IdentityClient(base_url, connect_timeout=1, read_timeout=1, transport=httpx.MockTransport(handler))
+def make_client(handler, base_url=BASE_URL, authorization=None):
+    return IdentityClient(base_url, connect_timeout=1, read_timeout=1, authorization=authorization,
+                          transport=httpx.MockTransport(handler))
 
 
 def user_payload(**overrides):
@@ -52,8 +53,9 @@ def test_active_user_returned_with_normalised_roles():
     assert user.user_id == "usr-syn-001"
     assert user.status == "ACTIVE"
     assert user.roles == ("STAFF", "ADMIN")
-    assert seen["url"].path == "/validation/users/usr-syn-001"
-    assert seen["url"].params["require_active"] == "true"
+    assert seen["url"].path == "/api/v1/validation/users/usr-syn-001"
+    # require_active is never sent, so a 403 ACCOUNT_INACTIVE can only concern the caller
+    assert "require_active" not in seen["url"].params
 
 
 def test_user_id_is_url_encoded():
@@ -64,7 +66,7 @@ def test_user_id_is_url_encoded():
         return httpx.Response(200, json=user_payload())
 
     make_client(handler).get_active_user("a/b")
-    assert seen["raw_path"].startswith(b"/validation/users/a%2Fb")
+    assert seen["raw_path"].startswith(b"/api/v1/validation/users/a%2Fb")
 
 
 def test_profile_fields_are_not_exposed():
@@ -98,14 +100,15 @@ def test_not_found_maps_to_user_not_found():
     assert error.message == "User 'usr-syn-001' was not found in the Identity Service."
 
 
-def test_account_inactive_maps_to_user_inactive():
+def test_caller_account_inactive_maps_to_forbidden():
     body = {"success": False, "error": {"code": "ACCOUNT_INACTIVE", "message": LEAKY_TEXT}}
-    expect_error(make_client(lambda r: httpx.Response(403, json=body)), 409, "USER_INACTIVE")
+    expect_error(make_client(lambda r: httpx.Response(403, json=body)), 403, "FORBIDDEN")
 
 
-def test_inactive_flag_in_success_body_maps_to_user_inactive():
-    payload = user_payload(status="INACTIVE", is_valid=False)
-    expect_error(make_client(lambda r: httpx.Response(200, json=payload)), 409, "USER_INACTIVE")
+def test_caller_token_rejected_maps_to_unauthorized():
+    body = {"success": False, "error": {"code": "INVALID_TOKEN", "message": LEAKY_TEXT}}
+    error = expect_error(make_client(lambda r: httpx.Response(401, json=body)), 401, "UNAUTHORIZED")
+    assert error.headers == {"WWW-Authenticate": "Bearer"}
 
 
 def test_other_forbidden_maps_to_502():
@@ -130,8 +133,68 @@ def test_malformed_json_maps_to_bad_response():
     ["not", "an", "object"],
     user_payload(roles="ADMIN"),
     user_payload(is_valid="yes"),
+    user_payload(is_authorized="no"),
     {"success": True, "data": {"user_id": "usr-syn-001"}},
 ])
 def test_unexpected_shape_maps_to_bad_response(payload):
     client = make_client(lambda r: httpx.Response(200, json=payload))
+    expect_error(client, 502, "IDENTITY_SERVICE_BAD_RESPONSE")
+
+
+def test_inactive_target_user_maps_to_user_inactive():
+    payload = user_payload(status="INACTIVE", is_valid=False)
+    expect_error(make_client(lambda r: httpx.Response(200, json=payload)), 409, "USER_INACTIVE")
+
+
+def test_lookup_user_reports_inactive_without_raising():
+    payload = user_payload(status="INACTIVE", is_valid=False)
+    user = make_client(lambda r: httpx.Response(200, json=payload)).lookup_user("usr-syn-001")
+    assert user.is_active is False
+    assert user.status == "INACTIVE"
+
+
+def test_caller_authorization_is_forwarded():
+    seen = {}
+
+    def handler(request):
+        seen["auth"] = request.headers.get("authorization")
+        return httpx.Response(200, json=user_payload())
+
+    make_client(handler, authorization="Bearer synthetic.test.token").get_active_user("usr-syn-001")
+    assert seen["auth"] == "Bearer synthetic.test.token"
+
+
+def test_with_authorization_returns_configured_copy():
+    client = make_client(lambda r: httpx.Response(200, json=user_payload()))
+    copy = client.with_authorization("Bearer x")
+    assert copy.authorization == "Bearer x"
+    assert client.authorization is None
+
+
+def test_university_id_resolves_to_canonical_user_id():
+    seen = {}
+
+    def handler(request):
+        seen["path"] = request.url.path
+        return httpx.Response(200, json=user_payload(user_id="usr-student-001", university_id="STU001"))
+
+    user = make_client(handler).get_active_user("STU001")
+    assert seen["path"] == "/api/v1/validation/users/STU001"
+    assert user.user_id == "usr-student-001"
+
+
+def test_required_role_is_sent_and_result_reported():
+    seen = {}
+
+    def handler(request):
+        seen["params"] = dict(request.url.params)
+        return httpx.Response(200, json=user_payload(is_authorized=False, required_role_checked="ADMIN"))
+
+    user = make_client(handler).lookup_user("usr-syn-001", required_role="ADMIN")
+    assert seen["params"] == {"required_role": "ADMIN"}
+    assert user.is_authorized is False
+
+
+def test_non_boolean_is_authorized_is_bad_response():
+    client = make_client(lambda r: httpx.Response(200, json=user_payload(is_authorized="no")))
     expect_error(client, 502, "IDENTITY_SERVICE_BAD_RESPONSE")

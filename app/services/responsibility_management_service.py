@@ -49,11 +49,19 @@ class ResponsibilityManagementService:
             )
         return responsibility
 
-    def _ensure_active_user(self, user_id: str) -> None:
-        """Identity Service owns users: an ACTIVE responsibility needs an existing, ACTIVE user."""
+    def _identity(self) -> IdentityClient:
         if self.identity_client is None:
             raise RuntimeError("ResponsibilityManagementService needs an IdentityClient for write operations")
-        self.identity_client.get_active_user(user_id)
+        return self.identity_client
+
+    def _resolve_user(self, user_id: str, require_active: bool) -> str:
+        """Identity Service owns users: the user must exist (and be ACTIVE for an ACTIVE responsibility).
+
+        Returns the canonical Identity user id (the JWT `sub`), which is what gets stored.
+        """
+        if require_active:
+            return self._identity().get_active_user(user_id).user_id
+        return self._identity().lookup_user(user_id).user_id
 
     def _resolve_scope(
         self,
@@ -82,14 +90,15 @@ class ResponsibilityManagementService:
             )
 
     def create_responsibility(self, data: ResponsibilityCreate) -> ResponsibilityResponse:
-        user_id = ensure_identifier(data.user_id, "User")
+        requested_user_id = ensure_identifier(data.user_id, "User")
         unit_id, department_id, faculty_id = self._resolve_scope(
             data.service_unit_id, data.department_id, data.faculty_id
         )
+        is_active = data.status == ResponsibilityStatus.ACTIVE
+        user_id = self._resolve_user(requested_user_id, require_active=is_active)
 
-        if data.status == ResponsibilityStatus.ACTIVE:
+        if is_active:
             self._ensure_no_active_duplicate(user_id, unit_id, department_id, faculty_id)
-            self._ensure_active_user(user_id)
 
         now = utc_now()
         responsibility = ServiceResponsibility(
@@ -143,7 +152,7 @@ class ResponsibilityManagementService:
             self._ensure_no_active_duplicate(
                 responsibility.user_id, unit_id, department_id, faculty_id, exclude_id=responsibility.id
             )
-            self._ensure_active_user(responsibility.user_id)
+            self._resolve_user(responsibility.user_id, require_active=True)
 
         responsibility.service_unit_id = unit_id
         responsibility.department_id = department_id

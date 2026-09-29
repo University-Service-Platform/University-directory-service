@@ -8,6 +8,9 @@ AUTH_MODE_JWKS = "jwks"
 SUPPORTED_AUTH_MODES = (AUTH_MODE_IDENTITY_HS256, AUTH_MODE_JWKS)
 
 DEFAULT_DATABASE_URL = "sqlite:///./directory.db"
+# Values fixed by the Identity Service API contract v1 (override via environment if they change).
+DEFAULT_JWT_ISSUER = "university-identity-service"
+DEFAULT_JWT_AUDIENCE = "university-services-platform"
 JWKS_PATH = "/.well-known/jwks.json"
 
 
@@ -59,7 +62,7 @@ def _positive_float(env: Mapping[str, str], name: str, default: float) -> float:
 def load_settings(env: Optional[Mapping[str, str]] = None) -> Settings:
     env = os.environ if env is None else env
 
-    auth_mode = (_optional(env, "AUTH_MODE") or AUTH_MODE_IDENTITY_HS256).lower()
+    auth_mode = (_optional(env, "AUTH_MODE") or AUTH_MODE_JWKS).lower()
     if auth_mode not in SUPPORTED_AUTH_MODES:
         raise ConfigurationError(
             f"AUTH_MODE must be one of: {', '.join(SUPPORTED_AUTH_MODES)}."
@@ -76,8 +79,8 @@ def load_settings(env: Optional[Mapping[str, str]] = None) -> Settings:
         identity_timeout_read=_positive_float(env, "IDENTITY_TIMEOUT_READ", 5.0),
         auth_mode=auth_mode,
         jwt_secret_key=_optional(env, "JWT_SECRET_KEY"),
-        jwt_issuer=_optional(env, "JWT_ISSUER"),
-        jwt_audience=_optional(env, "JWT_AUDIENCE"),
+        jwt_issuer=_optional(env, "JWT_ISSUER") or DEFAULT_JWT_ISSUER,
+        jwt_audience=_optional(env, "JWT_AUDIENCE") or DEFAULT_JWT_AUDIENCE,
         jwks_url=_optional(env, "JWKS_URL"),
         jwks_cache_ttl_seconds=int(_positive_float(env, "JWKS_CACHE_TTL_SECONDS", 300)),
     )
