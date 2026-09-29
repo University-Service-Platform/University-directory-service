@@ -62,9 +62,10 @@ class DepartmentManagementService:
         self,
         skip: int = 0,
         limit: int = 100,
-        faculty_id: Optional[str] = None
+        faculty_id: Optional[str] = None,
+        q: Optional[str] = None
     ) -> List[DepartmentResponse]:
-        departments = self.repository.list_all(skip=skip, limit=limit, faculty_id=faculty_id)
+        departments = self.repository.list_all(skip=skip, limit=limit, faculty_id=faculty_id, q=q)
         return [self._to_response(d) for d in departments]
 
     def get_department(self, department_id: str) -> DepartmentResponse:

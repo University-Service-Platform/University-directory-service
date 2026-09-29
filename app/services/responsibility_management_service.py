@@ -125,7 +125,8 @@ class ResponsibilityManagementService:
         service_unit_id: Optional[str] = None,
         department_id: Optional[str] = None,
         faculty_id: Optional[str] = None,
-        status_filter: Optional[ResponsibilityStatus] = None
+        status_filter: Optional[ResponsibilityStatus] = None,
+        q: Optional[str] = None
     ) -> List[ResponsibilityResponse]:
         records = self.repository.list_all(
             skip=skip,
@@ -134,7 +135,8 @@ class ResponsibilityManagementService:
             service_unit_id=service_unit_id,
             department_id=department_id,
             faculty_id=faculty_id,
-            status=status_filter
+            status=status_filter,
+            q=q
         )
         return [self._to_response(r) for r in records]
 

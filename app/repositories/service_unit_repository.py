@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from typing import Optional, List
 from app.models.service_unit import ServiceUnit
+from app.repositories.search import contains_any, normalise_query
 
 class ServiceUnitRepository:
     def __init__(self, db: Session):
@@ -15,8 +16,12 @@ class ServiceUnitRepository:
     def get_by_name(self, name: str) -> Optional[ServiceUnit]:
         return self.db.query(ServiceUnit).filter(ServiceUnit.name == name).first()
 
-    def list_all(self, skip: int = 0, limit: int = 100) -> List[ServiceUnit]:
-        return self.db.query(ServiceUnit).offset(skip).limit(limit).all()
+    def list_all(self, skip: int = 0, limit: int = 100, q: Optional[str] = None) -> List[ServiceUnit]:
+        query = self.db.query(ServiceUnit)
+        term = normalise_query(q)
+        if term:
+            query = query.filter(contains_any(term, ServiceUnit.code, ServiceUnit.name, ServiceUnit.description))
+        return query.order_by(ServiceUnit.code).offset(skip).limit(limit).all()
 
     def create(self, service_unit: ServiceUnit) -> ServiceUnit:
         self.db.add(service_unit)

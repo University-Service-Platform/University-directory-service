@@ -48,6 +48,8 @@ def list_responsibilities(
     department_id: Optional[str] = Query(None, description="Filter by department identifier"),
     faculty_id: Optional[str] = Query(None, description="Filter by faculty identifier"),
     status_filter: Optional[ResponsibilityStatus] = Query(None, alias="status", description="Filter by status"),
+    q: Optional[str] = Query(None, max_length=100, description="Case-insensitive search in user id, role title "
+                                                               "and unit/department/faculty code and name"),
     db: Session = Depends(get_db)
 ):
     service = ResponsibilityManagementService(db)
@@ -58,7 +60,8 @@ def list_responsibilities(
         service_unit_id=service_unit_id,
         department_id=department_id,
         faculty_id=faculty_id,
-        status_filter=status_filter
+        status_filter=status_filter,
+        q=q
     )
     return ResponsibilityListResponse(success=True, data=data)
 

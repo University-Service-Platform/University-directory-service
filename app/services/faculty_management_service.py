@@ -55,8 +55,8 @@ class FacultyManagementService:
         persisted = self.repository.create(new_faculty)
         return self._to_response(persisted)
 
-    def list_faculties(self, skip: int = 0, limit: int = 100) -> List[FacultyResponse]:
-        faculties = self.repository.list_all(skip=skip, limit=limit)
+    def list_faculties(self, skip: int = 0, limit: int = 100, q: Optional[str] = None) -> List[FacultyResponse]:
+        faculties = self.repository.list_all(skip=skip, limit=limit, q=q)
         return [self._to_response(f) for f in faculties]
 
     def get_faculty(self, faculty_id: str) -> FacultyResponse:

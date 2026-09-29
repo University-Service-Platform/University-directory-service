@@ -40,10 +40,11 @@ def list_departments(
     skip: int = Query(0, ge=0, description="Number of items to skip"),
     limit: int = Query(100, ge=1, le=500, description="Max items to return"),
     faculty_id: Optional[str] = Query(None, description="Optional filter by parent faculty ID"),
+    q: Optional[str] = Query(None, max_length=100, description="Case-insensitive search in code and name"),
     db: Session = Depends(get_db)
 ):
     service = DepartmentManagementService(db)
-    departments_data = service.list_departments(skip=skip, limit=limit, faculty_id=faculty_id)
+    departments_data = service.list_departments(skip=skip, limit=limit, faculty_id=faculty_id, q=q)
     return DepartmentListResponse(success=True, data=departments_data)
 
 @router.get(

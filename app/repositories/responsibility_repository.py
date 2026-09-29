@@ -1,6 +1,10 @@
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
+from app.models.department import Department
+from app.models.faculty import Faculty
 from app.models.service_responsibility import ServiceResponsibility, ResponsibilityStatus
+from app.models.service_unit import ServiceUnit
+from app.repositories.search import contains_any, normalise_query
 
 class ServiceResponsibilityRepository:
     def __init__(self, db: Session):
@@ -42,9 +46,20 @@ class ServiceResponsibilityRepository:
         service_unit_id: Optional[str] = None,
         department_id: Optional[str] = None,
         faculty_id: Optional[str] = None,
-        status: Optional[ResponsibilityStatus] = None
+        status: Optional[ResponsibilityStatus] = None,
+        q: Optional[str] = None
     ) -> List[ServiceResponsibility]:
         query = self._query()
+        term = normalise_query(q)
+        if term:
+            query = (
+                query.outerjoin(ServiceUnit, ServiceResponsibility.service_unit_id == ServiceUnit.id)
+                .outerjoin(Department, ServiceResponsibility.department_id == Department.id)
+                .outerjoin(Faculty, ServiceResponsibility.faculty_id == Faculty.id)
+                .filter(contains_any(term, ServiceResponsibility.user_id, ServiceResponsibility.role_title,
+                                     ServiceUnit.code, ServiceUnit.name, Department.code, Department.name,
+                                     Faculty.code, Faculty.name))
+            )
         if user_id:
             query = query.filter(ServiceResponsibility.user_id == user_id)
         if service_unit_id:

@@ -106,14 +106,16 @@ class AffiliationManagementService:
         limit: int = 100,
         department_id: Optional[str] = None,
         faculty_id: Optional[str] = None,
-        user_id: Optional[str] = None
+        user_id: Optional[str] = None,
+        q: Optional[str] = None
     ) -> List[AffiliationResponse]:
         affiliations = self.repository.list_all(
             skip=skip,
             limit=limit,
             department_id=department_id,
             faculty_id=faculty_id,
-            user_id=user_id
+            user_id=user_id,
+            q=q
         )
         return [self._to_response(a) for a in affiliations]
 

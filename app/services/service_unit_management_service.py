@@ -53,8 +53,10 @@ class ServiceUnitManagementService:
         persisted = self.repository.create(new_unit)
         return self._to_response(persisted)
 
-    def list_service_units(self, skip: int = 0, limit: int = 100) -> List[ServiceUnitResponse]:
-        units = self.repository.list_all(skip=skip, limit=limit)
+    def list_service_units(
+        self, skip: int = 0, limit: int = 100, q: Optional[str] = None
+    ) -> List[ServiceUnitResponse]:
+        units = self.repository.list_all(skip=skip, limit=limit, q=q)
         return [self._to_response(u) for u in units]
 
     def get_service_unit(self, service_unit_id: str) -> ServiceUnitResponse:

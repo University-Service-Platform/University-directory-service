@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, status, Query
+from typing import Optional
 from sqlalchemy.orm import Session
 from app.auth import get_current_user, require_admin
 from app.database import get_db
@@ -38,10 +39,11 @@ def create_service_unit(
 def list_service_units(
     skip: int = Query(0, ge=0, description="Number of items to skip"),
     limit: int = Query(100, ge=1, le=500, description="Max items to return"),
+    q: Optional[str] = Query(None, max_length=100, description="Case-insensitive search in code, name and description"),
     db: Session = Depends(get_db)
 ):
     service = ServiceUnitManagementService(db)
-    units_data = service.list_service_units(skip=skip, limit=limit)
+    units_data = service.list_service_units(skip=skip, limit=limit, q=q)
     return ServiceUnitListResponse(success=True, data=units_data)
 
 @router.get(

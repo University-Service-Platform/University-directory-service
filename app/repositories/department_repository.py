@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session, joinedload
 from typing import Optional, List
 from app.models.department import Department
+from app.repositories.search import contains_any, normalise_query
 
 class DepartmentRepository:
     def __init__(self, db: Session):
@@ -30,11 +31,16 @@ class DepartmentRepository:
             .first()
         )
 
-    def list_all(self, skip: int = 0, limit: int = 100, faculty_id: Optional[str] = None) -> List[Department]:
+    def list_all(
+        self, skip: int = 0, limit: int = 100, faculty_id: Optional[str] = None, q: Optional[str] = None
+    ) -> List[Department]:
         query = self.db.query(Department).options(joinedload(Department.faculty))
         if faculty_id:
             query = query.filter(Department.faculty_id == faculty_id)
-        return query.offset(skip).limit(limit).all()
+        term = normalise_query(q)
+        if term:
+            query = query.filter(contains_any(term, Department.code, Department.name))
+        return query.order_by(Department.code).offset(skip).limit(limit).all()
 
     def count_by_faculty(self, faculty_id: str) -> int:
         return self.db.query(Department).filter(Department.faculty_id == faculty_id).count()

@@ -42,9 +42,11 @@ def create_affiliation(
 def list_affiliations(
     skip: int = Query(0, ge=0, description="Number of items to skip"),
     limit: int = Query(100, ge=1, le=500, description="Max items to return"),
-    department_id: Optional[str] = Query(None, description="Filter by department identifier or code"),
-    faculty_id: Optional[str] = Query(None, description="Filter by faculty identifier or code"),
+    department_id: Optional[str] = Query(None, description="Filter by department identifier"),
+    faculty_id: Optional[str] = Query(None, description="Filter by faculty identifier"),
     user_id: Optional[str] = Query(None, description="Filter by user identifier"),
+    q: Optional[str] = Query(None, max_length=100,
+                             description="Case-insensitive search in user id and department/faculty code and name"),
     db: Session = Depends(get_db)
 ):
     service = AffiliationManagementService(db)
@@ -53,7 +55,8 @@ def list_affiliations(
         limit=limit,
         department_id=department_id,
         faculty_id=faculty_id,
-        user_id=user_id
+        user_id=user_id,
+        q=q
     )
     return AffiliationListResponse(success=True, data=affiliations_data)
 
