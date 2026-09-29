@@ -4,7 +4,7 @@
 
 **Audience:** Groups 6, 7 and 8, the Identity Service (also Group 5), the shared frontend team and the API Gateway team.
 
-The examples were captured from the running application; only the random ID suffixes were replaced with illustrative values. All codes, names and identifiers in the examples (`FSYN`, `DEPT-SYN`, `SU-SYN`, `usr-syn-001`, …) are **synthetic**. Machine-readable versions: [openapi.json](openapi.json) and the Postman collection in [postman/](postman/).
+The examples were captured from the running application; only the random ID suffixes were replaced with illustrative values. All codes, names and identifiers in the examples (`FSYN`, `DEPT-SYN`, `SU-SYN`, `usr-syn-001`, …) are **synthetic**. Machine-readable versions: [openapi.json](openapi.json) and the Postman collection in [postman/](postman/). For a per-team summary of which endpoints to call, see [API_GUIDE_FOR_TEAMS.md](API_GUIDE_FOR_TEAMS.md).
 
 ## 1. Conventions
 

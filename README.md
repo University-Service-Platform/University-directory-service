@@ -8,6 +8,7 @@ The Directory Service keeps the university's organisational structure. It owns f
 - API base path: `/api/v1` (Swagger UI at `/docs`, ReDoc at `/redoc`, liveness at `/health`)
 - Default port: `8002`
 - Cross-service contract: [docs/API_CONTRACT.md](docs/API_CONTRACT.md)
+- **Which API each team should use (Groups 6–8, frontend, gateway):** [docs/API_GUIDE_FOR_TEAMS.md](docs/API_GUIDE_FOR_TEAMS.md)
 - OpenAPI document: [docs/openapi.json](docs/openapi.json)
 - Postman collection: [docs/postman/](docs/postman/)
 - Platform integration (Docker Compose, API Gateway, frontend notes): [docs/INTEGRATION.md](docs/INTEGRATION.md)
