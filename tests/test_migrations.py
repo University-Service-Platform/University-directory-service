@@ -43,3 +43,32 @@ def test_downgrade_base_removes_schema(tmp_path):
         assert set(inspect(engine).get_table_names()) == {"alembic_version"}
     finally:
         engine.dispose()
+
+
+def test_upgrade_from_0001_preserves_responsibilities(tmp_path):
+    from sqlalchemy import text
+
+    url = f"sqlite:///{tmp_path / 'migrated.db'}"
+    config = _alembic_config(url)
+    command.upgrade(config, "0001")
+    engine = create_engine(url)
+    try:
+        with engine.begin() as connection:
+            connection.execute(text("INSERT INTO service_units (id, code, name) VALUES ('unit-syn-001', 'USYN', 'Synthetic Unit')"))
+            connection.execute(text(
+                "INSERT INTO service_responsibilities (id, user_id, service_unit_id, role_title, status) "
+                "VALUES ('resp-syn-001', 'usr-syn-001', 'unit-syn-001', 'Coordinator', 'ACTIVE')"))
+    finally:
+        engine.dispose()
+
+    command.upgrade(config, "head")
+
+    engine = create_engine(url)
+    try:
+        with engine.connect() as connection:
+            rows = connection.execute(text("SELECT id, user_id, service_unit_id FROM service_responsibilities")).all()
+        column = {c["name"]: c for c in inspect(engine).get_columns("service_responsibilities")}["user_id"]
+    finally:
+        engine.dispose()
+    assert rows == [("resp-syn-001", "usr-syn-001", "unit-syn-001")]
+    assert column["type"].length == 50

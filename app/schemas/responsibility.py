@@ -4,7 +4,7 @@ from datetime import datetime
 from app.models.service_responsibility import ResponsibilityStatus
 
 class ResponsibilityCreate(BaseModel):
-    user_id: str = Field(..., min_length=2, max_length=36, description="Identity Service user identifier")
+    user_id: str = Field(..., min_length=2, max_length=50, description="Identity Service user id or university id (stored as the canonical user id)")
     service_unit_id: Optional[str] = Field(None, min_length=2, max_length=50, description="Service Unit identifier or code")
     department_id: Optional[str] = Field(None, min_length=2, max_length=50, description="Department identifier or code")
     faculty_id: Optional[str] = Field(None, min_length=2, max_length=50, description="Faculty identifier or code")

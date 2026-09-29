@@ -25,7 +25,7 @@
             "title": "Faculty Id"
           },
           "user_id": {
-            "description": "User Identifier",
+            "description": "Identity Service user id or university id (stored as the canonical user id)",
             "maxLength": 50,
             "minLength": 2,
             "title": "User Id",
@@ -758,8 +758,8 @@
             "description": "ACTIVE or INACTIVE"
           },
           "user_id": {
-            "description": "Identity Service user identifier",
-            "maxLength": 36,
+            "description": "Identity Service user id or university id (stored as the canonical user id)",
+            "maxLength": 50,
             "minLength": 2,
             "title": "User Id",
             "type": "string"

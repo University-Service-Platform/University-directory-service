@@ -3,7 +3,7 @@ from typing import Optional, List
 from datetime import datetime
 
 class AffiliationBase(BaseModel):
-    user_id: str = Field(..., min_length=2, max_length=50, description="User Identifier")
+    user_id: str = Field(..., min_length=2, max_length=50, description="Identity Service user id or university id (stored as the canonical user id)")
     department_id: str = Field(..., min_length=2, max_length=50, description="Department Identifier or Code")
     faculty_id: Optional[str] = Field(None, min_length=2, max_length=50, description="Optional Faculty Identifier or Code")
 

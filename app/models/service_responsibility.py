@@ -12,7 +12,7 @@ class ServiceResponsibility(Base):
     __tablename__ = "service_responsibilities"
 
     id = Column(String(36), primary_key=True, index=True)
-    user_id = Column(String(36), index=True, nullable=False)
+    user_id = Column(String(50), index=True, nullable=False)
     service_unit_id = Column(String(36), ForeignKey("service_units.id", ondelete="RESTRICT"), nullable=True)
     department_id = Column(String(36), ForeignKey("departments.id", ondelete="RESTRICT"), nullable=True)
     faculty_id = Column(String(36), ForeignKey("faculties.id", ondelete="RESTRICT"), nullable=True)
