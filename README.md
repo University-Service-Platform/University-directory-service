@@ -1,5 +1,7 @@
 # University Directory Service
 
+[![CI](https://github.com/University-Service-Platform/University-directory-service/actions/workflows/ci.yml/badge.svg)](https://github.com/University-Service-Platform/University-directory-service/actions/workflows/ci.yml)
+
 The Directory Service keeps the university's organisational structure. It owns faculties, departments, service units, user affiliations and service responsibilities. Other services call it to check that a faculty, department, service unit, affiliation or responsibility exists and is valid.
 
 - Stack: Python 3.12, FastAPI, SQLAlchemy 2, Pydantic 2, Alembic, httpx, PyJWT
@@ -107,7 +109,7 @@ docker compose up --build        # uses docker-compose.yml; set variables in you
 - On start the container runs `alembic upgrade head`, then uvicorn on port 8002.
 - A `HEALTHCHECK` calls `/health`.
 - `docker-compose.yml` requires `IDENTITY_SERVICE_BASE_URL`. The Identity Service is deployed separately. On a shared Compose network use `http://identity-service:8001`; when it runs on the host use `http://host.docker.internal:8001`.
-- Not yet verified with `docker build`: Docker was unavailable in the development environment. The container's start command was verified outside Docker with the runtime-only requirements, and the service was run end to end against the real Identity Service (see [docs/INTEGRATION.md](docs/INTEGRATION.md)).
+- The image build and start-up are checked by the [CI workflow](#continuous-integration) on every pull request, so you don't need Docker installed locally to know the image works.
 - For the shared platform Compose file and API Gateway routes, see [docs/INTEGRATION.md](docs/INTEGRATION.md).
 
 ## Authentication
@@ -234,6 +236,22 @@ It is skipped unless the `IT_*` environment variables are set. See [docs/INTEGRA
 ```bash
 pytest -m integration tests/integration -v
 ```
+
+### Continuous integration
+
+[.github/workflows/ci.yml](.github/workflows/ci.yml) runs on every pull request, on every push to `main`, and on demand (**Actions** → **CI** → **Run workflow**). It has two jobs:
+
+- **Tests (pytest):** installs `requirements-dev.txt` and runs the full suite. It also confirms `docs/openapi.json` is up to date and uploads the JUnit report as an artifact.
+- **Docker build and smoke test:**
+  - builds the image and starts it with `docker compose up --wait` (the container must report healthy)
+  - checks `/health`, `/docs` and `/openapi.json`
+  - checks that `/api/v1/faculties` without a token returns `401 UNAUTHORIZED`
+  - checks that the container runs as the non-root `app` user
+  - checks that Alembic migrations reached `head`
+
+  It needs no real Identity Service.
+
+Results appear on the pull request's **Checks** tab and on the repository's **Actions** tab.
 
 ### Postman / newman
 
