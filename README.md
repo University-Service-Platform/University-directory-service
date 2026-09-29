@@ -8,6 +8,7 @@ The Directory Service keeps the university's organisational structure. It owns f
 - Cross-service contract: [docs/API_CONTRACT.md](docs/API_CONTRACT.md)
 - OpenAPI document: [docs/openapi.json](docs/openapi.json)
 - Postman collection: [docs/postman/](docs/postman/)
+- Platform integration (Docker Compose, API Gateway, frontend notes): [docs/INTEGRATION.md](docs/INTEGRATION.md)
 
 ## Service boundary
 
@@ -106,7 +107,8 @@ docker compose up --build        # uses docker-compose.yml; set variables in you
 - On start the container runs `alembic upgrade head`, then uvicorn on port 8002.
 - A `HEALTHCHECK` calls `/health`.
 - `docker-compose.yml` requires `IDENTITY_SERVICE_BASE_URL`. The Identity Service is deployed separately. On a shared Compose network use `http://identity-service:8001`; when it runs on the host use `http://host.docker.internal:8001`.
-- Not yet verified with `docker build`: Docker was unavailable in the development environment. The container's start command was verified outside Docker with the runtime-only requirements.
+- Not yet verified with `docker build`: Docker was unavailable in the development environment. The container's start command was verified outside Docker with the runtime-only requirements, and the service was run end to end against the real Identity Service (see [docs/INTEGRATION.md](docs/INTEGRATION.md)).
+- For the shared platform Compose file and API Gateway routes, see [docs/INTEGRATION.md](docs/INTEGRATION.md).
 
 ## Authentication
 
@@ -222,6 +224,16 @@ The suite needs no network access:
 - JWTs are signed with an RSA key generated in memory for each run, and the JWKS is mocked.
 - The Identity Service is replaced by a fake (`tests/fakes.py`) or `httpx.MockTransport`.
 - Every code, name and identifier in tests and documentation examples (e.g. `FSYN`, `DEPT-SYN`, `usr-syn-001`) is **synthetic** and does not describe real university data.
+
+### Cross-service integration test
+
+`tests/integration/` runs a real Identity ↔ Directory workflow against both services while they are running. It covers login, token verification, live ADMIN checks, affiliations, responsibilities and Identity eligibility calling back into the Directory Service.
+
+It is skipped unless the `IT_*` environment variables are set. See [docs/INTEGRATION.md](docs/INTEGRATION.md#5-cross-service-integration-test) for how to run it:
+
+```bash
+pytest -m integration tests/integration -v
+```
 
 ### Postman / newman
 
