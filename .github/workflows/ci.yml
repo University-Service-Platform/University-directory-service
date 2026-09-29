@@ -1,0 +1,105 @@
+# Continuous integration for the University Directory Service.
+# Runs on every pull request, on pushes to main, and on demand (Actions tab -> CI -> Run workflow).
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Tests (pytest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run test suite
+        # The cross-service integration test needs running services and is skipped here.
+        run: python -m pytest -q -rs --junitxml=pytest-report.xml
+
+      - name: Check docs/openapi.json is up to date
+        run: python -m pytest -q tests/test_openapi_spec.py
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-report
+          path: pytest-report.xml
+
+  docker:
+    name: Docker build and smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Placeholder only: the smoke test never needs a real Identity Service.
+      IDENTITY_SERVICE_BASE_URL: http://identity-service.invalid:8001
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate docker-compose.yml
+        run: docker compose config --quiet
+
+      - name: Build image and start container (waits until healthy)
+        run: docker compose up --build --detach --wait --wait-timeout 180
+
+      - name: Smoke test the running container
+        run: |
+          set -eu
+          base=http://localhost:8002
+
+          echo "GET /health"
+          curl --fail --silent --show-error "$base/health" | tee /tmp/health.json
+          echo
+          grep -q '"healthy"' /tmp/health.json
+
+          echo "GET /docs"
+          test "$(curl -s -o /dev/null -w '%{http_code}' "$base/docs")" = 200
+
+          echo "GET /openapi.json lists /api/v1 routes"
+          curl --fail --silent "$base/openapi.json" | grep -q '/api/v1/faculties'
+
+          echo "GET /api/v1/faculties without a token is refused"
+          code=$(curl -s -o /tmp/unauth.json -w '%{http_code}' "$base/api/v1/faculties")
+          cat /tmp/unauth.json; echo
+          test "$code" = 401
+          grep -q '"UNAUTHORIZED"' /tmp/unauth.json
+
+          echo "Container runs as the non-root 'app' user"
+          test "$(docker compose exec -T directory-service whoami)" = app
+
+          echo "Migrations were applied at start-up"
+          docker compose exec -T directory-service alembic current | tee /tmp/alembic.txt
+          grep -q '(head)' /tmp/alembic.txt
+
+          echo "Docker health status"
+          docker inspect --format '{{.State.Health.Status}}' "$(docker compose ps -q directory-service)" | grep -qx healthy
+
+          echo "All smoke checks passed."
+
+      - name: Show container logs
+        if: always()
+        run: docker compose logs --no-color directory-service
+
+      - name: Stop container
+        if: always()
+        run: docker compose down --volumes
