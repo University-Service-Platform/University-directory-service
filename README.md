@@ -7,13 +7,14 @@ The Directory Service keeps the university's organisational structure. It owns f
 - Stack: Python 3.12, FastAPI, SQLAlchemy 2, Pydantic 2, Alembic, httpx, PyJWT
 - API base path: `/api/v1` (Swagger UI at `/docs`, ReDoc at `/redoc`, liveness at `/health`)
 - Default port: `8002`
+- **Live deployment:** https://university-directory-service.onrender.com (Swagger UI at [https://university-directory-service.onrender.com/docs](https://university-directory-service.onrender.com/docs)). Free plan: the service sleeps when idle, so the first request can take up to ~50 seconds.
 - Cross-service contract: [docs/API_CONTRACT.md](docs/API_CONTRACT.md)
 - **Which API each team should use (Groups 6–8, frontend, gateway):** [docs/API_GUIDE_FOR_TEAMS.md](docs/API_GUIDE_FOR_TEAMS.md)
 - Documentation index (what each document is for): [docs/README.md](docs/README.md)
 - OpenAPI document: [docs/openapi.json](docs/openapi.json)
 - Postman collection: [docs/postman/](docs/postman/)
 - Platform integration (Docker Compose, API Gateway, frontend notes): [docs/INTEGRATION.md](docs/INTEGRATION.md)
-- Hosting on Render (Blueprint in `render.yaml`, PostgreSQL): [docs/DEPLOYMENT_RENDER.md](docs/DEPLOYMENT_RENDER.md)
+- Hosting on Render (current deployment, Blueprint in `render.yaml`, PostgreSQL): [docs/DEPLOYMENT_RENDER.md](docs/DEPLOYMENT_RENDER.md)
 
 ## Service boundary
 

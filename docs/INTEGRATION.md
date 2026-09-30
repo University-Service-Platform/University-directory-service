@@ -4,6 +4,8 @@
 
 This page describes what the platform needs in order to run the Directory Service alongside the other services. The API itself is specified in [API_CONTRACT.md](API_CONTRACT.md).
 
+**Current hosted instance:** `https://university-directory-service.onrender.com` (Render, Singapore; PostgreSQL on Neon). See [DEPLOYMENT_RENDER.md](DEPLOYMENT_RENDER.md#current-deployment). It becomes fully usable once `IDENTITY_SERVICE_BASE_URL` points at the hosted Identity Service.
+
 ## 1. Shared Docker Compose entry
 
 The Directory Service needs one other service at runtime, the **Identity Service**. It fetches the Identity signing keys (JWKS) to verify tokens and calls the Identity validation API. The Identity Service in turn calls the Directory Service for eligibility checks. Both calls are made per request, so either service can start first.
