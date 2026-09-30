@@ -13,6 +13,7 @@ The Directory Service keeps the university's organisational structure. It owns f
 - OpenAPI document: [docs/openapi.json](docs/openapi.json)
 - Postman collection: [docs/postman/](docs/postman/)
 - Platform integration (Docker Compose, API Gateway, frontend notes): [docs/INTEGRATION.md](docs/INTEGRATION.md)
+- Hosting on Render (Blueprint in `render.yaml`, PostgreSQL): [docs/DEPLOYMENT_RENDER.md](docs/DEPLOYMENT_RENDER.md)
 
 ## Service boundary
 
@@ -55,7 +56,7 @@ All configuration comes from environment variables; see [.env.example](.env.exam
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `DATABASE_URL` | `sqlite:///./directory.db` | SQLAlchemy database URL |
+| `DATABASE_URL` | `sqlite:///./directory.db` | SQLAlchemy database URL. SQLite locally; PostgreSQL when hosted (`postgresql://...`; the legacy `postgres://` scheme is accepted) |
 | `IDENTITY_SERVICE_BASE_URL` | *(none)* | Identity Service base URL, no trailing slash (e.g. `http://identity-service:8001` in Docker Compose). Required: used for signing keys, user checks and live role confirmation. |
 | `IDENTITY_TIMEOUT_CONNECT` | `3` | Connect timeout (seconds) for Identity calls |
 | `IDENTITY_TIMEOUT_READ` | `5` | Read timeout (seconds) for Identity calls |
@@ -244,6 +245,7 @@ pytest -m integration tests/integration -v
 [.github/workflows/ci.yml](.github/workflows/ci.yml) runs on every pull request, on every push to `main`, and on demand (**Actions** → **CI** → **Run workflow**). It has two jobs:
 
 - **Tests (pytest):** installs `requirements-dev.txt` and runs the full suite. It also confirms `docs/openapi.json` is up to date and uploads the JUnit report as an artifact.
+- **Tests on PostgreSQL:** starts PostgreSQL 16 and runs migrations up, `alembic check`, down and up again. It then runs the full suite against PostgreSQL, the database used when hosted.
 - **Docker build and smoke test:**
   - builds the image and starts it with `docker compose up --wait` (the container must report healthy)
   - checks `/health`, `/docs` and `/openapi.json`

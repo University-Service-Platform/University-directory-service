@@ -76,7 +76,8 @@ class AffiliationManagementService:
         self._ensure_not_already_affiliated(user_id, dept)
 
         new_aff = UserAffiliation(
-            id=f"aff-{user_id.lower()}-{uuid.uuid4().hex[:6]}",
+            # "aff-" + at most 24 chars of the user id + "-" + 6 hex = at most 35 chars (column is 36)
+            id=f"aff-{user_id.lower()[:24]}-{uuid.uuid4().hex[:6]}",
             user_id=user_id,
             department_id=dept.id,
             faculty_id=target_faculty_id,

@@ -65,4 +65,17 @@ def test_unknown_route_uses_project_format(client):
 
 
 def test_sqlite_foreign_keys_enforced(db_session):
+    if db_session.bind.dialect.name != "sqlite":
+        pytest.skip("PRAGMA foreign_keys only applies to SQLite")
     assert db_session.execute(text("PRAGMA foreign_keys")).scalar() == 1
+
+
+@pytest.mark.parametrize("url,expected", [
+    ("postgres://u:p@db.example.test:5432/directory", "postgresql+psycopg://u:p@db.example.test:5432/directory"),
+    ("postgresql://u:p@db.example.test:5432/directory", "postgresql+psycopg://u:p@db.example.test:5432/directory"),
+    ("postgresql+psycopg://u:p@db.example.test/directory", "postgresql+psycopg://u:p@db.example.test/directory"),
+    ("sqlite:///./directory.db", "sqlite:///./directory.db"),
+])
+def test_database_url_is_pinned_to_psycopg3(url, expected):
+    from app.config import load_settings
+    assert load_settings({"DATABASE_URL": url}).database_url == expected

@@ -59,6 +59,19 @@ def _positive_float(env: Mapping[str, str], name: str, default: float) -> float:
     return value
 
 
+def normalise_database_url(url: str) -> str:
+    """Pin PostgreSQL URLs to the psycopg 3 driver.
+
+    Hosts hand out postgres:// or postgresql:// URLs. SQLAlchemy 2 rejects the legacy
+    postgres:// scheme, and the default driver for postgresql:// differs between SQLAlchemy
+    versions (psycopg2 in 2.0, psycopg 3 in 2.1), so the driver is named explicitly.
+    """
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            return "postgresql+psycopg://" + url[len(prefix):]
+    return url
+
+
 def load_settings(env: Optional[Mapping[str, str]] = None) -> Settings:
     env = os.environ if env is None else env
 
@@ -73,7 +86,7 @@ def load_settings(env: Optional[Mapping[str, str]] = None) -> Settings:
         base_url = base_url.rstrip("/")
 
     return Settings(
-        database_url=_optional(env, "DATABASE_URL") or DEFAULT_DATABASE_URL,
+        database_url=normalise_database_url(_optional(env, "DATABASE_URL") or DEFAULT_DATABASE_URL),
         identity_service_base_url=base_url,
         identity_timeout_connect=_positive_float(env, "IDENTITY_TIMEOUT_CONNECT", 3.0),
         identity_timeout_read=_positive_float(env, "IDENTITY_TIMEOUT_READ", 5.0),

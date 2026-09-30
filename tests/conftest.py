@@ -8,16 +8,19 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from app.auth import get_token_verifier
+from app.config import normalise_database_url
 from app.database import Base, get_db
 from app.integrations.identity_client import get_identity_client
 from app.main import app
 from tests.auth_support import ADMIN_TOKEN, bearer, make_test_verifier
 from tests.fakes import FakeIdentityClient
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test_directory.db"
+# SQLite by default; set TEST_DATABASE_URL (e.g. a PostgreSQL URL) to run the suite against another database.
+SQLALCHEMY_DATABASE_URL = normalise_database_url(os.environ.get("TEST_DATABASE_URL") or "sqlite:///./test_directory.db")
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    SQLALCHEMY_DATABASE_URL,
+    connect_args={"check_same_thread": False} if SQLALCHEMY_DATABASE_URL.startswith("sqlite") else {},
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -28,6 +31,9 @@ def db_session():
     yield session
     session.close()
     Base.metadata.drop_all(bind=engine)
+    # Tables and PostgreSQL enum types are recreated for every test; psycopg caches type ids per
+    # connection, so start each test with fresh connections instead of reusing pooled ones.
+    engine.dispose()
 
 @pytest.fixture(scope="function")
 def identity_client():

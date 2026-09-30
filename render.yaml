@@ -1,0 +1,39 @@
+# Render Blueprint for the University Directory Service.
+# Render dashboard -> New -> Blueprint -> select this repository. See docs/DEPLOYMENT_RENDER.md.
+#
+# Creates a Docker web service (built from ./Dockerfile) and a PostgreSQL database.
+# Render's free web services have no persistent disk, so the SQLite default is not used here.
+# No secrets are stored in this file: the database URL is injected by Render, and
+# IDENTITY_SERVICE_BASE_URL is entered in the dashboard when the Blueprint is created.
+
+services:
+  - type: web
+    name: university-directory-service
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: university-directory-db
+          property: connectionString
+      - key: IDENTITY_SERVICE_BASE_URL
+        sync: false  # set in the dashboard, e.g. https://<identity-service>.onrender.com
+      - key: AUTH_MODE
+        value: jwks
+      # A sleeping free-plan Identity Service can take up to ~1 minute to wake up;
+      # generous timeouts avoid spurious 503s during a demo.
+      - key: IDENTITY_TIMEOUT_CONNECT
+        value: "10"
+      - key: IDENTITY_TIMEOUT_READ
+        value: "60"
+
+databases:
+  - name: university-directory-db
+    plan: free
+    region: singapore
+    databaseName: directory
+    user: directory
