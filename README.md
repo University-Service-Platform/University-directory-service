@@ -217,6 +217,21 @@ python scripts/export_openapi.py
 
 `tests/test_openapi_spec.py` fails while the committed file is out of date.
 
+## Demo data
+
+A fresh database is empty. `scripts/seed_demo_data.py` loads **synthetic** demo data through the public API. That means an ADMIN logs in at the Identity Service, and every user is verified by the Identity Service. It creates:
+
+- 3 faculties, 4 departments and 5 service units
+- affiliations and service responsibilities for the Identity Service's demo users (STU001, ACD001, STF001, ADS001, SDO001, TEC001, RMG001, EVO001)
+
+Together these support the other teams' workflows, such as service-desk triage, resource approval and department-restricted bookings. Existing records are skipped, so the script is safe to run again.
+
+```powershell
+$env:SEED_ADMIN_PASSWORD = "<demo admin password>"   # never commit or share it
+python scripts/seed_demo_data.py --base-url https://<api-gateway>
+# or: --identity-url https://<identity> --directory-url https://<directory>
+```
+
 ## Testing
 
 ### Automated tests
