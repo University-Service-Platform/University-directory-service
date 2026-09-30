@@ -60,9 +60,15 @@ def _positive_float(env: Mapping[str, str], name: str, default: float) -> float:
 
 
 def normalise_database_url(url: str) -> str:
-    """SQLAlchemy 2 no longer accepts the legacy postgres:// scheme."""
-    if url.startswith("postgres://"):
-        return "postgresql://" + url[len("postgres://"):]
+    """Pin PostgreSQL URLs to the psycopg 3 driver.
+
+    Hosts hand out postgres:// or postgresql:// URLs. SQLAlchemy 2 rejects the legacy
+    postgres:// scheme, and the default driver for postgresql:// differs between SQLAlchemy
+    versions (psycopg2 in 2.0, psycopg 3 in 2.1), so the driver is named explicitly.
+    """
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            return "postgresql+psycopg://" + url[len(prefix):]
     return url
 
 
