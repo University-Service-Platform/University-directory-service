@@ -65,4 +65,12 @@ def test_unknown_route_uses_project_format(client):
 
 
 def test_sqlite_foreign_keys_enforced(db_session):
+    if db_session.bind.dialect.name != "sqlite":
+        pytest.skip("PRAGMA foreign_keys only applies to SQLite")
     assert db_session.execute(text("PRAGMA foreign_keys")).scalar() == 1
+
+
+def test_postgres_scheme_is_normalised():
+    from app.config import load_settings
+    settings = load_settings({"DATABASE_URL": "postgres://u:p@db.example.test:5432/directory"})
+    assert settings.database_url == "postgresql://u:p@db.example.test:5432/directory"

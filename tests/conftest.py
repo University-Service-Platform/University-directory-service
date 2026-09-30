@@ -14,10 +14,12 @@ from app.main import app
 from tests.auth_support import ADMIN_TOKEN, bearer, make_test_verifier
 from tests.fakes import FakeIdentityClient
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test_directory.db"
+# SQLite by default; set TEST_DATABASE_URL (e.g. a PostgreSQL URL) to run the suite against another database.
+SQLALCHEMY_DATABASE_URL = os.environ.get("TEST_DATABASE_URL") or "sqlite:///./test_directory.db"
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    SQLALCHEMY_DATABASE_URL,
+    connect_args={"check_same_thread": False} if SQLALCHEMY_DATABASE_URL.startswith("sqlite") else {},
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

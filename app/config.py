@@ -59,6 +59,13 @@ def _positive_float(env: Mapping[str, str], name: str, default: float) -> float:
     return value
 
 
+def normalise_database_url(url: str) -> str:
+    """SQLAlchemy 2 no longer accepts the legacy postgres:// scheme."""
+    if url.startswith("postgres://"):
+        return "postgresql://" + url[len("postgres://"):]
+    return url
+
+
 def load_settings(env: Optional[Mapping[str, str]] = None) -> Settings:
     env = os.environ if env is None else env
 
@@ -73,7 +80,7 @@ def load_settings(env: Optional[Mapping[str, str]] = None) -> Settings:
         base_url = base_url.rstrip("/")
 
     return Settings(
-        database_url=_optional(env, "DATABASE_URL") or DEFAULT_DATABASE_URL,
+        database_url=normalise_database_url(_optional(env, "DATABASE_URL") or DEFAULT_DATABASE_URL),
         identity_service_base_url=base_url,
         identity_timeout_connect=_positive_float(env, "IDENTITY_TIMEOUT_CONNECT", 3.0),
         identity_timeout_read=_positive_float(env, "IDENTITY_TIMEOUT_READ", 5.0),

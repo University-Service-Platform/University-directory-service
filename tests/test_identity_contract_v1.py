@@ -125,3 +125,17 @@ def test_inactive_responsibility_allowed_for_inactive_user(client, db_session, i
     response = client.post("/api/v1/responsibilities", json=body)
     assert response.status_code == 201
     assert response.json()["data"]["status"] == "INACTIVE"
+
+
+def test_affiliation_id_fits_column_for_long_user_ids(client, db_session, identity_client):
+    """PostgreSQL enforces the 36-character primary key that SQLite ignores."""
+    seed(db_session)
+    long_id = "usr-" + "x" * 46  # 50 characters, the maximum user id length
+    identity_client.aliases["LONG001"] = long_id
+
+    response = client.post("/api/v1/affiliations", json={"user_id": "LONG001", "department_id": "DSYN"})
+
+    assert response.status_code == 201
+    data = response.json()["data"]
+    assert data["user_id"] == long_id
+    assert len(data["id"]) <= 36

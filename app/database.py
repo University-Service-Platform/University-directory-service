@@ -8,9 +8,12 @@ from app.config import get_settings
 
 DATABASE_URL = get_settings().database_url
 
+IS_SQLITE = DATABASE_URL.startswith("sqlite")
+
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
+    connect_args={"check_same_thread": False} if IS_SQLITE else {},
+    pool_pre_ping=not IS_SQLITE,  # hosted PostgreSQL drops idle connections
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
