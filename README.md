@@ -223,7 +223,7 @@ python scripts/export_openapi.py
 A fresh database is empty. `scripts/seed_demo_data.py` loads **synthetic** demo data through the public API. That means an ADMIN logs in at the Identity Service, and every user is verified by the Identity Service. It creates:
 
 - 3 faculties, 4 departments and 5 service units
-- affiliations and service responsibilities for the Identity Service's demo users (STU001, ACD001, STF001, ADS001, SDO001, TEC001, RMG001, EVO001)
+- affiliations and service responsibilities for the Identity Service's demo users (STU001, STU003, ACD001, STF001, ADS001, SDO001, TEC001, RMG001, EVO001)
 
 Together these support the other teams' workflows, such as service-desk triage, resource approval and department-restricted bookings. Existing records are skipped, so the script is safe to run again.
 

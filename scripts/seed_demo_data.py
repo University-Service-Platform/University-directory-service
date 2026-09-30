@@ -1,7 +1,7 @@
 """Load synthetic demo data into a running Directory Service, through its public API.
 
 All data is SYNTHETIC. It is built around the Identity Service's synthetic demo users
-(ADM001, STF001, STU001, ACD001, ADS001, SDO001, TEC001, RMG001, EVO001) so that
+(ADM001, STF001, STU001, STU003, ACD001, ADS001, SDO001, TEC001, RMG001, EVO001) so that
 Groups 6-8 can exercise their workflows against the hosted services.
 
 Every record goes through the normal API: an ADMIN logs in at the Identity Service, and the
@@ -54,6 +54,7 @@ SERVICE_UNITS: List[Tuple[str, str]] = [
 # Identity Service and is deliberately not affiliated (it demonstrates rejection).
 AFFILIATIONS: List[Tuple[str, str]] = [
     ("STU001", "CS"),
+    ("STU003", "SE"),
     ("ACD001", "CS"),
     ("STF001", "MATH"),
     ("ADS001", "SE"),
