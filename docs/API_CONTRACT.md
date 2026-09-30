@@ -4,7 +4,58 @@
 
 **Audience:** Groups 6, 7 and 8, the Identity Service (also Group 5), the shared frontend team and the API Gateway team.
 
-The examples were captured from the running application; only the random ID suffixes were replaced with illustrative values. All codes, names and identifiers in the examples (`FSYN`, `DEPT-SYN`, `SU-SYN`, `usr-syn-001`, …) are **synthetic**. Machine-readable versions: [openapi.json](openapi.json) and the Postman collection in [postman/](postman/).
+The examples were captured from the running application; only the random ID suffixes were replaced with illustrative values. All codes, names and identifiers in the examples (`FSYN`, `DEPT-SYN`, `SU-SYN`, `usr-syn-001`, …) are **synthetic**. Machine-readable versions: [openapi.json](openapi.json) and the Postman collection in [postman/](postman/). For a per-team summary of which endpoints to call, see [API_GUIDE_FOR_TEAMS.md](API_GUIDE_FOR_TEAMS.md).
+
+## Contents
+
+- [Endpoint summary](#endpoint-summary)
+- [1. Conventions](#1-conventions): envelope, errors, authentication, deprecated aliases, Identity dependency
+- [2. Validation endpoints](#2-validation-endpoints-for-dependent-services): for Groups 6–8
+- [3. Management endpoints](#3-management-endpoints): faculties, departments, service units, affiliations, responsibilities
+- [4. Error code index](#4-error-code-index)
+- [5. Notes for the Identity Service](#5-notes-for-the-identity-service-group-5)
+- [6. Open items](#6-open-items-to-agree-with-other-teams)
+- [7. Change log](#7-change-log)
+
+## Endpoint summary
+
+"Token" means any valid Identity token; "ADMIN" means a token with role `ADMIN` (confirmed live on writes). This table is checked against `docs/openapi.json` by `tests/test_api_docs.py`, so it always lists every implemented operation.
+
+| Method | Path | Auth | Summary | Section |
+|---|---|---|---|---|
+| GET | `/health` | Public | Health Check | 1 |
+| GET | `/api/v1/validation/departments/{department_id}` | Token | Validate Department | 2.2 |
+| GET | `/api/v1/validation/faculties/{faculty_id}` | Token | Validate Faculty | 2.1 |
+| GET | `/api/v1/validation/service-units/{unit_id}` | Token | Validate Service Unit | 2.3 |
+| GET | `/api/v1/validation/users/{user_id}/affiliation` | Token | Validate User Affiliation | 2.4 |
+| GET | `/api/v1/validation/users/{user_id}/responsibilities` | Token | Validate Service Responsibility Mappings | 2.5 |
+| GET | `/api/v1/faculties` | Token | List Faculties | 3.1 |
+| POST | `/api/v1/faculties` | ADMIN | Create Faculty | 3.1 |
+| GET | `/api/v1/faculties/{faculty_id}` | Token | Get Faculty by ID or Code | 3.1 |
+| PUT | `/api/v1/faculties/{faculty_id}` | ADMIN | Update Faculty | 3.1 |
+| DELETE | `/api/v1/faculties/{faculty_id}` | ADMIN | Delete Faculty | 3.1 |
+| GET | `/api/v1/departments` | Token | List Departments | 3.2 |
+| POST | `/api/v1/departments` | ADMIN | Create Department | 3.2 |
+| GET | `/api/v1/departments/{department_id}` | Token | Get Department by ID or Code | 3.2 |
+| PUT | `/api/v1/departments/{department_id}` | ADMIN | Update Department | 3.2 |
+| PATCH | `/api/v1/departments/{department_id}` | ADMIN | Patch Department | 3.2 |
+| DELETE | `/api/v1/departments/{department_id}` | ADMIN | Delete Department | 3.2 |
+| GET | `/api/v1/service-units` | Token | List Service Units | 3.3 |
+| POST | `/api/v1/service-units` | ADMIN | Create Service Unit | 3.3 |
+| GET | `/api/v1/service-units/{service_unit_id}` | Token | Get Service Unit by ID or Code | 3.3 |
+| PUT | `/api/v1/service-units/{service_unit_id}` | ADMIN | Update Service Unit | 3.3 |
+| DELETE | `/api/v1/service-units/{service_unit_id}` | ADMIN | Delete Service Unit | 3.3 |
+| GET | `/api/v1/affiliations` | Token | List Affiliations | 3.4 |
+| POST | `/api/v1/affiliations` | ADMIN | Create User Affiliation | 3.4 |
+| GET | `/api/v1/affiliations/users/{user_id}` | Token | Get User Organizational Affiliation | 3.4 |
+| GET | `/api/v1/affiliations/{affiliation_id}` | Token | Get Affiliation by ID | 3.4 |
+| PUT | `/api/v1/affiliations/{affiliation_id}` | ADMIN | Update Affiliation | 3.4 |
+| DELETE | `/api/v1/affiliations/{affiliation_id}` | ADMIN | Delete Affiliation | 3.4 |
+| GET | `/api/v1/responsibilities` | Token | List Service Responsibilities | 3.5 |
+| POST | `/api/v1/responsibilities` | ADMIN | Create Service Responsibility | 3.5 |
+| GET | `/api/v1/responsibilities/{responsibility_id}` | Token | Get Service Responsibility | 3.5 |
+| PUT | `/api/v1/responsibilities/{responsibility_id}` | ADMIN | Update Service Responsibility | 3.5 |
+| DELETE | `/api/v1/responsibilities/{responsibility_id}` | ADMIN | Delete Service Responsibility | 3.5 |
 
 ## 1. Conventions
 
@@ -580,7 +631,7 @@ The Identity contract (§7) lists Directory endpoints for its eligibility checks
 
 ## 6. Open items (to agree with other teams)
 
-1. Gateway base path in front of `/api/v1` (suggested, mirroring Identity: `/directory/**` → strip prefix; *to be confirmed* by the Gateway team).
+1. Gateway base path. The shared frontend calls `/api/v1/...` on one origin, so the gateway should route by path without stripping a prefix. The route table, including the shared `/api/v1/validation/users/...` paths, is in [INTEGRATION.md](INTEGRATION.md#2-api-gateway-routes). The final base path is *to be confirmed* by the Gateway team.
 2. Date for removing the unprefixed deprecated aliases.
 3. Whether the Identity eligibility endpoint adopts the notes in section 5.
 
@@ -590,3 +641,4 @@ The Identity contract (§7) lists Directory endpoints for its eligibility checks
 |---|---|
 | v1 (draft) | Versioned API under `/api/v1`; JWT auth; ADMIN writes; 409 delete protection; service responsibility CRUD; affiliation validation endpoint; `q` search on lists. |
 | v1 (draft, update) | Aligned with Identity API contract v1: `jwks` is the default auth mode (RS256, JWKS, `iss`/`aud`/`roles`); writes confirm ADMIN live; Identity calls use `/api/v1/validation/users/{id}` with the caller's token forwarded; canonical Identity user ids are stored; responsibility `user_id` widened to 50 characters. |
+| v1 (draft, docs) | No API change. Added contents, endpoint summary (checked against OpenAPI by tests), per-team usage guide ([API_GUIDE_FOR_TEAMS.md](API_GUIDE_FOR_TEAMS.md)); corrected the gateway open item to match [INTEGRATION.md](INTEGRATION.md). |
