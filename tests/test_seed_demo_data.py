@@ -7,6 +7,7 @@ from scripts import seed_demo_data as seed_script
 DEMO_USERS = {
     "STF001": "usr-staff-001",
     "STU001": "usr-student-001",
+    "STU003": "usr-student-003",
     "ACD001": "usr-academic-001",
     "ADS001": "usr-adminstaff-001",
     "SDO001": "usr-servicedesk-001",
@@ -49,6 +50,10 @@ def test_seeded_data_supports_the_team_workflows(client, db_session, demo_identi
     student = client.get("/api/v1/validation/users/usr-student-001/affiliation", params={"department_id": "CS"})
     assert student.status_code == 200
     assert student.json()["data"]["affiliations"][0]["faculty"]["code"] == "FSC"
+    second_student = client.get("/api/v1/validation/users/usr-student-003/affiliation",
+                                params={"department_id": "SE"})
+    assert second_student.status_code == 200
+    assert second_student.json()["data"]["affiliations"][0]["faculty"]["code"] == "FCT"
 
     desk = client.get("/api/v1/responsibilities", params={"q": "ITHD", "status": "ACTIVE"}).json()["data"]
     assert {r["user_id"] for r in desk} == {"usr-servicedesk-001", "usr-technician-001"}
