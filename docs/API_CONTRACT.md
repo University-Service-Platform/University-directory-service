@@ -62,6 +62,7 @@ The examples were captured from the running application; only the random ID suff
 | Item | Value |
 |---|---|
 | Base path | `/api/v1` (gateway base path: *to be confirmed*) |
+| Hosted instance | `https://university-directory-service.onrender.com` (Render free plan: sleeps when idle, first request can take up to ~50 s) |
 | Liveness | `GET /health` (public, not versioned) |
 | Swagger / OpenAPI | `{base}/docs` · `{base}/openapi.json` |
 | Format | JSON, UTF-8 |

@@ -1,5 +1,28 @@
 # Deploying the Directory Service on Render
 
+## Current deployment
+
+| Item | Value |
+|---|---|
+| Service URL | `https://university-directory-service.onrender.com` |
+| Swagger UI | `https://university-directory-service.onrender.com/docs` |
+| Health check | `https://university-directory-service.onrender.com/health` |
+| Platform | Render web service, **Free** instance, region **Singapore**, built from `./Dockerfile` on `main` |
+| Database | PostgreSQL on **Neon** (free plan, AWS Singapore), direct connection (not the pooled `-pooler` host) |
+| Deploys | Manual: Render has no GitHub app access to the organisation, so after changes are merged use **Manual Deploy → Deploy latest commit** |
+| `IDENTITY_SERVICE_BASE_URL` | *placeholder until the Identity Service is hosted*; API calls with a token return `503 IDENTITY_SERVICE_UNAVAILABLE` until it is set |
+
+Verified after deployment (30 September 2026):
+
+- `/health` returned `200`
+- `/docs` returned `200`
+- `/openapi.json` listed all 33 operations
+- `/api/v1/faculties` without a token, or with an invalid token, returned `401 UNAUTHORIZED`
+
+The deployment below was done with the **manual web service + Neon** path (see [Alternative](#alternative-render-web-service--neon-postgresql)). The Blueprint is kept for teams that can use Render's own PostgreSQL.
+
+## Deploy with the Blueprint
+
 This deploys the service from GitHub with the Blueprint in [`render.yaml`](../render.yaml). It creates:
 
 | Render resource | What it is |
@@ -62,6 +85,33 @@ These limits were current when this was written; check Render's documentation fo
 | `PORT` | Render | Render sets it; the container listens on it |
 
 To change a value later: service page → **Environment** → edit → **Save changes**. The service redeploys.
+
+## Alternative: Render web service + Neon PostgreSQL
+
+This is how the current deployment was made. It avoids creating a Render database (Render asked for card verification; note that it did so even for the free web service).
+
+1. **Neon:** create a free project (region **AWS Asia Pacific (Singapore)**, the same as the Render service).
+   - Open **Connect**, switch **Connection pooling off** (the host must not contain `-pooler`) and copy the connection string.
+   - The string contains the database password. Keep it only in Render's settings, never in Git, documents or screenshots.
+2. **Render → New → Web Service:**
+   - connect the repository
+   - **Language** Docker, **Branch** `main`, **Region** Singapore, **Instance** Free (check the summary shows **$0 / month**)
+3. **Environment variables:**
+
+   | Key | Value |
+   |---|---|
+   | `DATABASE_URL` | the Neon connection string (keep `?sslmode=require&channel_binding=require`) |
+   | `IDENTITY_SERVICE_BASE_URL` | the Identity Service URL, with no trailing `/` |
+   | `IDENTITY_TIMEOUT_CONNECT` | `10` |
+   | `IDENTITY_TIMEOUT_READ` | `60` |
+
+   The service turns `postgresql://` into the psycopg 3 driver URL itself.
+4. **Advanced → Health Check Path:** `/health`, then **Deploy Web Service**.
+
+**Changing the database password later:**
+
+1. In Neon, open **Connect → Reset password** and copy the new string (pooling off).
+2. In Render, open the service **Environment**, edit `DATABASE_URL`, then **Save changes**. The service redeploys.
 
 ## Troubleshooting
 

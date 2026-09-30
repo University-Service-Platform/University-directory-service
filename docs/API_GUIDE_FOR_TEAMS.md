@@ -11,10 +11,10 @@ All examples use synthetic data.
 
 ## 1. Two services, two jobs
 
-| Service | Owns | Base URL (local) |
-|---|---|---|
-| **Identity Service** | users, login, JWTs, roles, account status, eligibility decisions | `http://localhost:8001` |
-| **Directory Service** | faculties, departments, service units, who is affiliated with a department, who is responsible for a unit | `http://localhost:8002` |
+| Service | Owns | Base URL (local) | Hosted |
+|---|---|---|---|
+| **Identity Service** | users, login, JWTs, roles, account status, eligibility decisions | `http://localhost:8001` | *to be confirmed* |
+| **Directory Service** | faculties, departments, service units, who is affiliated with a department, who is responsible for a unit | `http://localhost:8002` | `https://university-directory-service.onrender.com` |
 
 Both use the prefix `/api/v1`, the same envelope `{"success": true, "data": ...}` / `{"success": false, "error": {"code", "message"}}`, and the same JWT. The gateway base path is still *to be confirmed*, so read the base URLs from configuration (e.g. `IDENTITY_SERVICE_BASE_URL`, `DIRECTORY_SERVICE_BASE_URL`).
 
