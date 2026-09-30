@@ -10,7 +10,9 @@
 | Platform | Render web service, **Free** instance, region **Singapore**, built from `./Dockerfile` on `main` |
 | Database | PostgreSQL on **Neon** (free plan, AWS Singapore), direct connection (not the pooled `-pooler` host) |
 | Deploys | Manual: Render has no GitHub app access to the organisation, so after changes are merged use **Manual Deploy → Deploy latest commit** |
-| `IDENTITY_SERVICE_BASE_URL` | *placeholder until the Identity Service is hosted*; API calls with a token return `503 IDENTITY_SERVICE_UNAVAILABLE` until it is set |
+| `IDENTITY_SERVICE_BASE_URL` | `https://university-identity-service.onrender.com` |
+| API Gateway | `https://university-api-gateway.onrender.com`, which routes `/api/v1/...` to this service |
+| Demo data | Loaded with `scripts/seed_demo_data.py`: 24 synthetic records (see README, "Demo data") |
 
 Verified after deployment (30 September 2026):
 

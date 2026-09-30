@@ -8,6 +8,7 @@ The Directory Service keeps the university's organisational structure. It owns f
 - API base path: `/api/v1` (Swagger UI at `/docs`, ReDoc at `/redoc`, liveness at `/health`)
 - Default port: `8002`
 - **Live deployment:** https://university-directory-service.onrender.com (Swagger UI at [https://university-directory-service.onrender.com/docs](https://university-directory-service.onrender.com/docs)). Free plan: the service sleeps when idle, so the first request can take up to ~50 seconds.
+- **API Gateway:** https://university-api-gateway.onrender.com (same `/api/v1` paths). **Identity Service:** https://university-identity-service.onrender.com
 - Cross-service contract: [docs/API_CONTRACT.md](docs/API_CONTRACT.md)
 - **Which API each team should use (Groups 6–8, frontend, gateway):** [docs/API_GUIDE_FOR_TEAMS.md](docs/API_GUIDE_FOR_TEAMS.md)
 - Documentation index (what each document is for): [docs/README.md](docs/README.md)
@@ -70,7 +71,7 @@ All configuration comes from environment variables; see [.env.example](.env.exam
 
 No URL, host or secret is hard-coded in the application. In the default `jwks` mode the service needs no secret at all. If the configuration needed by the selected auth mode is missing, protected requests fail closed with `500 AUTH_NOT_CONFIGURED`.
 
-The API gateway base path is **to be confirmed**. The service does not assume one.
+The shared **API Gateway** is live at `https://university-api-gateway.onrender.com`. It routes the same `/api/v1/...` paths to this service, with no extra prefix. The service itself does not depend on the gateway.
 
 ## Local setup
 

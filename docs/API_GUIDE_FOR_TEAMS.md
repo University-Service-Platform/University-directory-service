@@ -13,10 +13,10 @@ All examples use synthetic data.
 
 | Service | Owns | Base URL (local) | Hosted |
 |---|---|---|---|
-| **Identity Service** | users, login, JWTs, roles, account status, eligibility decisions | `http://localhost:8001` | *to be confirmed* |
+| **Identity Service** | users, login, JWTs, roles, account status, eligibility decisions | `http://localhost:8001` | `https://university-identity-service.onrender.com` |
 | **Directory Service** | faculties, departments, service units, who is affiliated with a department, who is responsible for a unit | `http://localhost:8002` | `https://university-directory-service.onrender.com` |
 
-Both use the prefix `/api/v1`, the same envelope `{"success": true, "data": ...}` / `{"success": false, "error": {"code", "message"}}`, and the same JWT. The gateway base path is still *to be confirmed*, so read the base URLs from configuration (e.g. `IDENTITY_SERVICE_BASE_URL`, `DIRECTORY_SERVICE_BASE_URL`).
+Both use the prefix `/api/v1`, the same envelope `{"success": true, "data": ...}` / `{"success": false, "error": {"code", "message"}}`, and the same JWT. Through the **API Gateway** (`https://university-api-gateway.onrender.com`) both services are reached with the same `/api/v1/...` paths. Read the base URLs from configuration (e.g. `IDENTITY_SERVICE_BASE_URL`, `DIRECTORY_SERVICE_BASE_URL`), and don't hard-code them.
 
 ## 2. Which question goes where
 
