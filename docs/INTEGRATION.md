@@ -4,7 +4,7 @@
 
 This page describes what the platform needs in order to run the Directory Service alongside the other services. The API itself is specified in [API_CONTRACT.md](API_CONTRACT.md).
 
-**Current hosted instance:** `https://university-directory-service.onrender.com` (Render, Singapore; PostgreSQL on Neon). See [DEPLOYMENT_RENDER.md](DEPLOYMENT_RENDER.md#current-deployment). It becomes fully usable once `IDENTITY_SERVICE_BASE_URL` points at the hosted Identity Service.
+**Current hosted instance:** `https://university-directory-service.onrender.com` (Render, Singapore; PostgreSQL on Neon). See [DEPLOYMENT_RENDER.md](DEPLOYMENT_RENDER.md#current-deployment). It uses the hosted Identity Service (`https://university-identity-service.onrender.com`) and is reachable through the API Gateway (`https://university-api-gateway.onrender.com`). The gateway's route table matches section 2, and its `/health/services` reports the Directory as `up`. Synthetic demo data is loaded (see the README, "Demo data").
 
 ## 1. Shared Docker Compose entry
 

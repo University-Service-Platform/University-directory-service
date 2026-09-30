@@ -61,7 +61,7 @@ The examples were captured from the running application; only the random ID suff
 
 | Item | Value |
 |---|---|
-| Base path | `/api/v1` (gateway base path: *to be confirmed*) |
+| Base path | `/api/v1`. Through the API Gateway `https://university-api-gateway.onrender.com` the same paths are used, with no extra prefix. |
 | Hosted instance | `https://university-directory-service.onrender.com` (Render free plan: sleeps when idle, first request can take up to ~50 s) |
 | Liveness | `GET /health` (public, not versioned) |
 | Swagger / OpenAPI | `{base}/docs` · `{base}/openapi.json` |
@@ -632,7 +632,7 @@ The Identity contract (§7) lists Directory endpoints for its eligibility checks
 
 ## 6. Open items (to agree with other teams)
 
-1. Gateway base path. The shared frontend calls `/api/v1/...` on one origin, so the gateway should route by path without stripping a prefix. The route table, including the shared `/api/v1/validation/users/...` paths, is in [INTEGRATION.md](INTEGRATION.md#2-api-gateway-routes). The final base path is *to be confirmed* by the Gateway team.
+1. Gateway base path: **resolved.** The API Gateway (`https://university-api-gateway.onrender.com`) routes `/api/v1/...` by path without a prefix, as described in [INTEGRATION.md](INTEGRATION.md#2-api-gateway-routes), including the shared `/api/v1/validation/users/...` paths. Its published route table (`/gateway/routes`) was checked on 30 September 2026.
 2. Date for removing the unprefixed deprecated aliases.
 3. Whether the Identity eligibility endpoint adopts the notes in section 5.
 
@@ -643,3 +643,4 @@ The Identity contract (§7) lists Directory endpoints for its eligibility checks
 | v1 (draft) | Versioned API under `/api/v1`; JWT auth; ADMIN writes; 409 delete protection; service responsibility CRUD; affiliation validation endpoint; `q` search on lists. |
 | v1 (draft, update) | Aligned with Identity API contract v1: `jwks` is the default auth mode (RS256, JWKS, `iss`/`aud`/`roles`); writes confirm ADMIN live; Identity calls use `/api/v1/validation/users/{id}` with the caller's token forwarded; canonical Identity user ids are stored; responsibility `user_id` widened to 50 characters. |
 | v1 (draft, docs) | No API change. Added contents, endpoint summary (checked against OpenAPI by tests), per-team usage guide ([API_GUIDE_FOR_TEAMS.md](API_GUIDE_FOR_TEAMS.md)); corrected the gateway open item to match [INTEGRATION.md](INTEGRATION.md). |
+| v1 (draft, deployed) | No API change. Hosted on Render with the Identity Service and the API Gateway; gateway open item resolved; synthetic demo data loaded with `scripts/seed_demo_data.py`. |
